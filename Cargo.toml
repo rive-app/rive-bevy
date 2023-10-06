@@ -1,0 +1,15 @@
+[package]
+name = "rive-bevy"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { git = "https://github.com/Elabajaba/bevy", rev = "5ecefbb" }
+rive-rs = { git = "https://github.com/rive-app/rive-rs", features = ["vello"] }
+vello = { git = "https://github.com/linebender/vello", rev = "ee3a076" }
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
