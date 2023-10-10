@@ -12,8 +12,9 @@ use bevy::{
         render_asset::RenderAssets,
         render_graph::{Node, RenderGraphApp},
         render_resource::{
-            CommandEncoderDescriptor, ImageCopyTexture, Origin3d, TextureAspect, TextureDescriptor,
-            TextureFormat, TextureUsages, TextureViewDescriptor,
+            CommandEncoderDescriptor, Extent3d, ImageCopyTexture, Origin3d, Texture, TextureAspect,
+            TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
+            TextureViewDescriptor,
         },
         renderer::{RenderDevice, RenderQueue},
         RenderApp,
@@ -49,15 +50,23 @@ macro_rules! get_scene_or_continue {
 fn insert_deafult_viewports(
     mut commands: Commands,
     query: Query<
-        Entity,
+        (Entity, &Handle<Image>),
         (
             Or<(Added<LinearAnimation>, Added<StateMachine>)>,
             Without<Viewport>,
         ),
     >,
+    image_assets: Res<Assets<Image>>,
 ) {
-    for entity in &query {
-        commands.entity(entity).insert(Viewport::default());
+    for (entity, image_handle) in &query {
+        let mut viewport = Viewport::default();
+
+        if let Some(image) = image_assets.get(image_handle) {
+            let size = image.size();
+            viewport.resize(size.x as u32, size.y as u32);
+        }
+
+        commands.entity(entity).insert(viewport);
     }
 }
 
@@ -165,7 +174,7 @@ fn pass_pointer_events(
     for (linear_animation, state_machine, sprite_entity, viewport) in &mut scenes {
         let mut scene = get_scene_or_continue!(linear_animation, state_machine);
 
-        let Some((transform, image)) = sprite_entity
+        let Some((transform, image_handle)) = sprite_entity
             .entity
             .map(|entity| sprites.get(entity).ok())
             .flatten()
@@ -173,7 +182,7 @@ fn pass_pointer_events(
             continue;
         };
 
-        let image_dimensions = image_assets.get(image).unwrap().size();
+        let image_dimensions = image_assets.get(image_handle).unwrap().size();
         let scaled_image_dimension = image_dimensions * transform.scale.truncate();
         let bounding_box =
             Rect::from_center_size(transform.translation.truncate(), scaled_image_dimension);
@@ -269,6 +278,7 @@ fn send_generic_events(
 
 struct VelloNode {
     renderer: Arc<Mutex<Renderer>>,
+    auxiliary_texture: Texture,
     scene_entities: Vec<Entity>,
 }
 
@@ -289,6 +299,16 @@ impl FromWorld for VelloNode {
                 )
                 .unwrap(),
             )),
+            auxiliary_texture: device.create_texture(&TextureDescriptor {
+                label: None,
+                size: Extent3d::default(),
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::D2,
+                format: TextureFormat::Rgba8Unorm,
+                usage: TextureUsages::STORAGE_BINDING | TextureUsages::COPY_SRC,
+                view_formats: &[],
+            }),
             scene_entities: Vec::new(),
         }
     }
@@ -309,24 +329,17 @@ impl Node for VelloNode {
         let queue = world.resource::<RenderQueue>();
         let gpu_images = world.resource::<RenderAssets<Image>>();
 
-        for VelloScene(scene, image) in self
+        for VelloScene {
+            scene,
+            image_handle: image,
+            ..
+        } in self
             .scene_entities
             .iter()
             .copied()
             .filter_map(|e| world.get::<VelloScene>(e))
         {
             let gpu_image = gpu_images.get(image).unwrap();
-
-            let render_image = device.create_texture(&TextureDescriptor {
-                label: None,
-                size: gpu_image.texture.size(),
-                mip_level_count: gpu_image.texture.mip_level_count(),
-                sample_count: gpu_image.texture.sample_count(),
-                dimension: gpu_image.texture.dimension(),
-                format: TextureFormat::Rgba8Unorm,
-                usage: TextureUsages::STORAGE_BINDING | TextureUsages::COPY_SRC,
-                view_formats: &[],
-            });
 
             self.renderer
                 .lock()
@@ -335,7 +348,9 @@ impl Node for VelloNode {
                     device.wgpu_device(),
                     &queue,
                     &scene,
-                    &render_image.create_view(&TextureViewDescriptor::default()),
+                    &self
+                        .auxiliary_texture
+                        .create_view(&TextureViewDescriptor::default()),
                     &RenderParams {
                         base_color: vello::peniko::Color::TRANSPARENT,
                         width: gpu_image.size.x as u32,
@@ -349,7 +364,7 @@ impl Node for VelloNode {
 
             encoder.copy_texture_to_texture(
                 ImageCopyTexture {
-                    texture: &render_image,
+                    texture: &self.auxiliary_texture,
                     mip_level: 0,
                     origin: Origin3d::ZERO,
                     aspect: TextureAspect::All,
@@ -370,6 +385,31 @@ impl Node for VelloNode {
     }
 
     fn update(&mut self, world: &mut World) {
+        let mut max_size = Extent3d::default();
+        for vello_scene in world.query::<&VelloScene>().iter(world) {
+            max_size.width = max_size.width.max(vello_scene.width.next_power_of_two());
+            max_size.height = max_size.height.max(vello_scene.height.next_power_of_two());
+        }
+
+        if self.auxiliary_texture.width() != max_size.width
+            || self.auxiliary_texture.height() != max_size.height
+        {
+            let device = world.resource::<RenderDevice>();
+            dbg!(max_size);
+
+            self.auxiliary_texture.destroy();
+            self.auxiliary_texture = device.create_texture(&TextureDescriptor {
+                label: None,
+                size: max_size,
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::D2,
+                format: TextureFormat::Rgba8Unorm,
+                usage: TextureUsages::STORAGE_BINDING | TextureUsages::COPY_SRC,
+                view_formats: &[],
+            })
+        }
+
         self.scene_entities.clear();
         self.scene_entities.extend(
             world

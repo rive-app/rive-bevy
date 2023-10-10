@@ -41,22 +41,36 @@ pub struct SceneTarget {
 pub(crate) struct VelloFragment(pub SceneFragment);
 
 #[derive(Component)]
-pub(crate) struct VelloScene(pub vello::Scene, pub Handle<Image>);
+pub(crate) struct VelloScene {
+    pub scene: vello::Scene,
+    pub image_handle: Handle<Image>,
+    pub width: u32,
+    pub height: u32,
+}
 
 impl ExtractComponent for VelloScene {
-    type Query = (&'static VelloFragment, &'static Handle<Image>);
+    type Query = (
+        &'static VelloFragment,
+        &'static Handle<Image>,
+        &'static Viewport,
+    );
 
     type Filter = ();
 
     type Out = Self;
 
     fn extract_component(
-        (fragment, image): bevy::ecs::query::QueryItem<'_, Self::Query>,
+        (fragment, image, viewport): bevy::ecs::query::QueryItem<'_, Self::Query>,
     ) -> Option<Self> {
         let mut scene = vello::Scene::default();
         let mut builder = SceneBuilder::for_scene(&mut scene);
         builder.append(&fragment.0, None);
 
-        Some(Self(scene, image.clone()))
+        Some(Self {
+            scene,
+            image_handle: image.clone(),
+            width: viewport.width(),
+            height: viewport.height(),
+        })
     }
 }
