@@ -24,7 +24,7 @@ fn setup(
 
     // This creates two separate assets.
     let cube_image_handle = images.add(cube_image.clone());
-    let rect_image_handle = images.add(cube_image);
+    let rect_image_handle = images.add(cube_image.clone());
 
     commands.spawn(PointLightBundle {
         point_light: PointLight {
@@ -112,6 +112,32 @@ fn setup(
                 entity: Some(sprite_entity),
             },
         });
+
+    {
+        let rect_image_handle2 = images.add(cube_image.clone());
+
+        let sprite_entity2 = commands
+            .spawn(SpriteBundle {
+                texture: rect_image_handle2.clone(),
+                transform: Transform::from_scale(Vec3::splat(0.5))
+                    .with_translation(Vec3::new(250.0, 0.0, 0.0)),
+                ..default()
+            })
+            .id();
+
+        commands
+            .spawn(StateMachine {
+                artboard: asset_server.load("rating-animation.riv#Artboard0"),
+                ..default()
+            })
+            .insert(SceneTarget {
+                image: rect_image_handle2,
+                // Adding the sprite here enables mouse input being passed to the Scene.
+                sprite: SpriteEntity {
+                    entity: Some(sprite_entity2),
+                },
+            });
+    }
 }
 
 fn rotate_cube(time: Res<Time>, mut query: Query<&mut Transform, With<DefaultCube>>) {
@@ -123,7 +149,7 @@ fn rotate_cube(time: Res<Time>, mut query: Query<&mut Transform, With<DefaultCub
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(AssetPlugin::default().watch_for_changes()))
         .add_plugins(RivePlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, rotate_cube)

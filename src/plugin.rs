@@ -1,4 +1,7 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 use bevy::{
     core_pipeline::{core_2d, core_3d},
@@ -70,19 +73,26 @@ fn resize_viewports(
     }
 }
 
+#[derive(Debug, Default, Deref, DerefMut, Resource)]
+struct ArtboardEntities(HashMap<AssetId<assets::Artboard>, Entity>);
+
 fn instantiate_linear_animations(
     mut commands: Commands,
     query: Query<(Entity, &LinearAnimation), Without<RiveLinearAnimation>>,
     artboard_assets: Res<Assets<assets::Artboard>>,
+    mut artboard_entities: ResMut<ArtboardEntities>,
 ) {
     for (entity, linear_animation) in &query {
         if let Some(artboard) = artboard_assets.get(&linear_animation.artboard) {
+            let handle = linear_animation.artboard.clone();
             let linear_animation =
                 rive_rs::LinearAnimation::instantiate(&artboard, linear_animation.index).unwrap();
 
             commands
                 .entity(entity)
                 .insert(RiveLinearAnimation(linear_animation));
+
+            artboard_entities.insert(handle.id(), entity);
         }
     }
 }
@@ -91,15 +101,40 @@ fn instantiate_state_machines(
     mut commands: Commands,
     query: Query<(Entity, &StateMachine), Without<RiveStateMachine>>,
     artboard_assets: Res<Assets<assets::Artboard>>,
+    mut artboard_entities: ResMut<ArtboardEntities>,
 ) {
     for (entity, state_machine) in &query {
         if let Some(artboard) = artboard_assets.get(&state_machine.artboard) {
+            let handle = state_machine.artboard.clone();
             let state_machine =
                 rive_rs::StateMachine::instantiate(&artboard, state_machine.index).unwrap();
 
             commands
                 .entity(entity)
                 .insert(RiveStateMachine(state_machine));
+
+            artboard_entities.insert(handle.id(), entity);
+        }
+    }
+}
+
+fn reinstantiate_linear_animations(
+    mut commands: Commands,
+    mut asset_events: EventReader<AssetEvent<assets::Artboard>>,
+    mut artboard_entities: ResMut<ArtboardEntities>,
+) {
+    for event in asset_events.read() {
+        match event {
+            AssetEvent::Modified { id } => {
+                commands
+                    .entity(*artboard_entities.get(id).unwrap())
+                    .remove::<RiveLinearAnimation>()
+                    .remove::<RiveStateMachine>();
+            }
+            AssetEvent::Removed { id } => {
+                artboard_entities.remove(&id);
+            }
+            _ => (),
         }
     }
 }
@@ -118,6 +153,15 @@ fn pass_pointer_events(
     mut mouse_button_input_events: EventReader<MouseButtonInput>,
     windows: Query<&Window>,
 ) {
+    let (camera, camera_transform) = camera.single();
+    let get_world_pos = |cursor_position| {
+        camera
+            .viewport_to_world(camera_transform, cursor_position)
+            .map(|ray| ray.origin.truncate())
+    };
+    let cursor_moved_events: Vec<_> = cursor_moved_events.read().collect();
+    let mouse_button_input_events: Vec<_> = mouse_button_input_events.read().collect();
+
     for (linear_animation, state_machine, sprite_entity, viewport) in &mut scenes {
         let mut scene = get_scene_or_continue!(linear_animation, state_machine);
 
@@ -136,14 +180,7 @@ fn pass_pointer_events(
         let get_relative_pos =
             |world_pos| (world_pos - bounding_box.min) / transform.scale.truncate();
 
-        let (camera, camera_transform) = camera.single();
-        let get_world_pos = |cursor_position| {
-            camera
-                .viewport_to_world(camera_transform, cursor_position)
-                .map(|ray| ray.origin.truncate())
-        };
-
-        for cursor_moved in cursor_moved_events.read() {
+        for cursor_moved in &cursor_moved_events {
             if let Some(world_pos) = get_world_pos(cursor_moved.position) {
                 if bounding_box.contains(world_pos) {
                     let pos = get_relative_pos(world_pos);
@@ -152,7 +189,7 @@ fn pass_pointer_events(
             }
         }
 
-        for mouse_button_input in mouse_button_input_events.read() {
+        for mouse_button_input in &mouse_button_input_events {
             if mouse_button_input.button != MouseButton::Left {
                 continue;
             }
@@ -349,12 +386,14 @@ impl Plugin for RivePlugin {
         app.init_asset::<Artboard>()
             .init_asset::<Riv>()
             .init_asset_loader::<RivLoader>()
+            .init_resource::<ArtboardEntities>()
             .add_event::<Input>()
             .add_event::<GenericEvent>()
             .add_systems(
                 PreUpdate,
                 (
                     (insert_deafult_viewports, resize_viewports).chain(),
+                    reinstantiate_linear_animations,
                     instantiate_linear_animations,
                     instantiate_state_machines,
                 ),
