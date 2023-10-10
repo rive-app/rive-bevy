@@ -17,7 +17,7 @@ use bevy::{
             TextureViewDescriptor,
         },
         renderer::{RenderDevice, RenderQueue},
-        RenderApp,
+        Render, RenderApp, RenderSet,
     },
 };
 use rive_rs::Instantiate;
@@ -276,20 +276,25 @@ fn send_generic_events(
     }
 }
 
-struct VelloNode {
-    renderer: Arc<Mutex<Renderer>>,
+struct VelloContextInner {
+    renderer: Renderer,
     auxiliary_texture: Texture,
-    scene_entities: Vec<Entity>,
+    has_renderered_this_frame: bool,
 }
 
-impl FromWorld for VelloNode {
+#[derive(Resource)]
+struct VelloContext {
+    inner: Arc<Mutex<VelloContextInner>>,
+}
+
+impl FromWorld for VelloContext {
     fn from_world(world: &mut World) -> Self {
         let device = world.resource::<RenderDevice>();
         let queue = world.resource::<RenderQueue>();
 
         Self {
-            renderer: Arc::new(Mutex::new(
-                Renderer::new(
+            inner: Arc::new(Mutex::new(VelloContextInner {
+                renderer: Renderer::new(
                     device.wgpu_device(),
                     &RendererOptions {
                         surface_format: None,
@@ -298,20 +303,29 @@ impl FromWorld for VelloNode {
                     },
                 )
                 .unwrap(),
-            )),
-            auxiliary_texture: device.create_texture(&TextureDescriptor {
-                label: None,
-                size: Extent3d::default(),
-                mip_level_count: 1,
-                sample_count: 1,
-                dimension: TextureDimension::D2,
-                format: TextureFormat::Rgba8Unorm,
-                usage: TextureUsages::STORAGE_BINDING | TextureUsages::COPY_SRC,
-                view_formats: &[],
-            }),
-            scene_entities: Vec::new(),
+                auxiliary_texture: device.create_texture(&TextureDescriptor {
+                    label: None,
+                    size: Extent3d::default(),
+                    mip_level_count: 1,
+                    sample_count: 1,
+                    dimension: TextureDimension::D2,
+                    format: TextureFormat::Rgba8Unorm,
+                    usage: TextureUsages::STORAGE_BINDING | TextureUsages::COPY_SRC,
+                    view_formats: &[],
+                }),
+                has_renderered_this_frame: false,
+            })),
         }
     }
+}
+
+fn reset_renderer(renderer: Res<VelloContext>) {
+    renderer.inner.lock().unwrap().has_renderered_this_frame = false;
+}
+
+#[derive(Debug, Default)]
+struct VelloNode {
+    scene_entities: Vec<Entity>,
 }
 
 impl VelloNode {
@@ -325,6 +339,13 @@ impl Node for VelloNode {
         render_context: &mut bevy::render::renderer::RenderContext,
         world: &World,
     ) -> Result<(), bevy::render::render_graph::NodeRunError> {
+        let context = world.resource::<VelloContext>().inner.clone();
+        let mut context = context.lock().unwrap();
+
+        if context.has_renderered_this_frame {
+            return Ok(());
+        }
+
         let device = render_context.render_device();
         let queue = world.resource::<RenderQueue>();
         let gpu_images = world.resource::<RenderAssets<Image>>();
@@ -340,17 +361,17 @@ impl Node for VelloNode {
             .filter_map(|e| world.get::<VelloScene>(e))
         {
             let gpu_image = gpu_images.get(image).unwrap();
+            let auxiliary_texture_view = context
+                .auxiliary_texture
+                .create_view(&TextureViewDescriptor::default());
 
-            self.renderer
-                .lock()
-                .unwrap()
+            context
+                .renderer
                 .render_to_texture(
                     device.wgpu_device(),
                     &queue,
                     &scene,
-                    &self
-                        .auxiliary_texture
-                        .create_view(&TextureViewDescriptor::default()),
+                    &auxiliary_texture_view,
                     &RenderParams {
                         base_color: vello::peniko::Color::TRANSPARENT,
                         width: gpu_image.size.x as u32,
@@ -364,7 +385,7 @@ impl Node for VelloNode {
 
             encoder.copy_texture_to_texture(
                 ImageCopyTexture {
-                    texture: &self.auxiliary_texture,
+                    texture: &context.auxiliary_texture,
                     mip_level: 0,
                     origin: Origin3d::ZERO,
                     aspect: TextureAspect::All,
@@ -379,26 +400,38 @@ impl Node for VelloNode {
             );
 
             queue.submit(Some(encoder.finish()));
+
+            context.has_renderered_this_frame = true;
         }
 
         Ok(())
     }
 
     fn update(&mut self, world: &mut World) {
-        let mut max_size = Extent3d::default();
-        for vello_scene in world.query::<&VelloScene>().iter(world) {
-            max_size.width = max_size.width.max(vello_scene.width.next_power_of_two());
-            max_size.height = max_size.height.max(vello_scene.height.next_power_of_two());
+        let context = world.resource::<VelloContext>().inner.clone();
+        let mut context = context.lock().unwrap();
+
+        if context.has_renderered_this_frame {
+            return;
         }
 
-        if self.auxiliary_texture.width() != max_size.width
-            || self.auxiliary_texture.height() != max_size.height
+        let max_size = world.query::<&VelloScene>().iter(world).fold(
+            Extent3d::default(),
+            |mut size, vello_scene| {
+                size.width = size.width.max(vello_scene.width.next_power_of_two());
+                size.height = size.height.max(vello_scene.height.next_power_of_two());
+
+                size
+            },
+        );
+
+        if context.auxiliary_texture.width() != max_size.width
+            || context.auxiliary_texture.height() != max_size.height
         {
             let device = world.resource::<RenderDevice>();
-            dbg!(max_size);
 
-            self.auxiliary_texture.destroy();
-            self.auxiliary_texture = device.create_texture(&TextureDescriptor {
+            context.auxiliary_texture.destroy();
+            context.auxiliary_texture = device.create_texture(&TextureDescriptor {
                 label: None,
                 size: max_size,
                 mip_level_count: 1,
@@ -457,6 +490,8 @@ impl Plugin for RivePlugin {
         };
 
         render_app
+            .init_resource::<VelloContext>()
+            .add_systems(Render, reset_renderer.in_set(RenderSet::Cleanup))
             .add_render_graph_node::<VelloNode>(core_2d::graph::NAME, VelloNode::NAME)
             .add_render_graph_edges(
                 core_2d::graph::NAME,
