@@ -9,9 +9,8 @@ use bevy::{
         render_asset::RenderAssets,
         render_graph::Node,
         render_resource::{
-            CommandEncoderDescriptor, Extent3d, ImageCopyTexture, Origin3d, Texture, TextureAspect,
-            TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
-            TextureViewDescriptor,
+            Extent3d, ImageCopyTexture, Origin3d, Texture, TextureAspect, TextureDescriptor,
+            TextureDimension, TextureFormat, TextureUsages, TextureViewDescriptor,
         },
         renderer::{RenderDevice, RenderQueue},
     },
