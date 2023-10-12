@@ -1491,6 +1491,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "etagere"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fcf22f748754352918e082e0039335ee92454a5d62bcaf69b5e8daf5907d9644"
+dependencies = [
+ "euclid",
+ "svg_fmt",
+]
+
+[[package]]
 name = "euclid"
 version = "0.22.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2966,6 +2976,7 @@ name = "rive-bevy"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "etagere",
  "rive-rs",
  "vello",
 ]

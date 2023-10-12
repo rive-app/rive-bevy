@@ -1,5 +1,7 @@
+use std::sync::Arc;
+
 use bevy::{prelude::*, render::extract_component::ExtractComponent};
-use vello::{SceneBuilder, SceneFragment};
+use vello::SceneFragment;
 
 use crate::assets::Artboard;
 
@@ -38,11 +40,11 @@ pub struct SceneTarget {
 }
 
 #[derive(Component, Deref)]
-pub(crate) struct VelloFragment(pub SceneFragment);
+pub(crate) struct VelloFragment(pub Arc<SceneFragment>);
 
 #[derive(Component)]
 pub(crate) struct VelloScene {
-    pub scene: vello::Scene,
+    pub fragment: Arc<vello::SceneFragment>,
     pub image_handle: Handle<Image>,
     pub width: u32,
     pub height: u32,
@@ -62,12 +64,8 @@ impl ExtractComponent for VelloScene {
     fn extract_component(
         (fragment, image, viewport): bevy::ecs::query::QueryItem<'_, Self::Query>,
     ) -> Option<Self> {
-        let mut scene = vello::Scene::default();
-        let mut builder = SceneBuilder::for_scene(&mut scene);
-        builder.append(&fragment.0, None);
-
         Some(Self {
-            scene,
+            fragment: fragment.0.clone(),
             image_handle: image.clone(),
             width: viewport.width(),
             height: viewport.height(),

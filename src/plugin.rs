@@ -1,27 +1,15 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
+use std::{collections::HashMap, sync::Arc};
 
 use bevy::{
     core_pipeline::{core_2d, core_3d},
     input::{mouse::MouseButtonInput, ButtonState},
     prelude::*,
     render::{
-        extract_component::ExtractComponentPlugin,
-        render_asset::RenderAssets,
-        render_graph::{Node, RenderGraphApp},
-        render_resource::{
-            CommandEncoderDescriptor, Extent3d, ImageCopyTexture, Origin3d, Texture, TextureAspect,
-            TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
-            TextureViewDescriptor,
-        },
-        renderer::{RenderDevice, RenderQueue},
-        Render, RenderApp, RenderSet,
+        extract_component::ExtractComponentPlugin, render_graph::RenderGraphApp, Render, RenderApp,
+        RenderSet,
     },
 };
 use rive_rs::Instantiate;
-use vello::{RenderParams, Renderer, RendererOptions};
 
 use crate::{
     assets::{self, Artboard, Riv, RivLoader},
@@ -30,6 +18,7 @@ use crate::{
         VelloFragment, VelloScene, Viewport,
     },
     events::{GenericEvent, Input, InputValue},
+    node,
 };
 
 macro_rules! get_scene_or_continue {
@@ -253,7 +242,7 @@ fn render_rive_scenes(
         if scene.advance_and_maybe_draw(&mut renderer, elapsed, &mut viewport) {
             commands
                 .entity(entity)
-                .insert(VelloFragment(renderer.into_scene()));
+                .insert(VelloFragment(Arc::new(renderer.into_scene())));
         } else {
             commands.entity(entity).remove::<VelloFragment>();
         }
@@ -276,182 +265,9 @@ fn send_generic_events(
     }
 }
 
-struct VelloContextInner {
-    renderer: Renderer,
-    auxiliary_texture: Texture,
-    has_renderered_this_frame: bool,
+fn reset_renderer(context: Res<node::VelloContext>) {
+    context.reset_renderer();
 }
-
-#[derive(Resource)]
-struct VelloContext {
-    inner: Arc<Mutex<VelloContextInner>>,
-}
-
-impl FromWorld for VelloContext {
-    fn from_world(world: &mut World) -> Self {
-        let device = world.resource::<RenderDevice>();
-        let queue = world.resource::<RenderQueue>();
-
-        Self {
-            inner: Arc::new(Mutex::new(VelloContextInner {
-                renderer: Renderer::new(
-                    device.wgpu_device(),
-                    &RendererOptions {
-                        surface_format: None,
-                        timestamp_period: queue.get_timestamp_period(),
-                        use_cpu: false,
-                    },
-                )
-                .unwrap(),
-                auxiliary_texture: device.create_texture(&TextureDescriptor {
-                    label: None,
-                    size: Extent3d::default(),
-                    mip_level_count: 1,
-                    sample_count: 1,
-                    dimension: TextureDimension::D2,
-                    format: TextureFormat::Rgba8Unorm,
-                    usage: TextureUsages::STORAGE_BINDING | TextureUsages::COPY_SRC,
-                    view_formats: &[],
-                }),
-                has_renderered_this_frame: false,
-            })),
-        }
-    }
-}
-
-fn reset_renderer(renderer: Res<VelloContext>) {
-    renderer.inner.lock().unwrap().has_renderered_this_frame = false;
-}
-
-#[derive(Debug, Default)]
-struct VelloNode {
-    scene_entities: Vec<Entity>,
-}
-
-impl VelloNode {
-    pub const NAME: &'static str = "vello";
-}
-
-impl Node for VelloNode {
-    fn run(
-        &self,
-        _graph: &mut bevy::render::render_graph::RenderGraphContext,
-        render_context: &mut bevy::render::renderer::RenderContext,
-        world: &World,
-    ) -> Result<(), bevy::render::render_graph::NodeRunError> {
-        let context = world.resource::<VelloContext>().inner.clone();
-        let mut context = context.lock().unwrap();
-
-        if context.has_renderered_this_frame {
-            return Ok(());
-        }
-
-        let device = render_context.render_device();
-        let queue = world.resource::<RenderQueue>();
-        let gpu_images = world.resource::<RenderAssets<Image>>();
-
-        for VelloScene {
-            scene,
-            image_handle: image,
-            ..
-        } in self
-            .scene_entities
-            .iter()
-            .copied()
-            .filter_map(|e| world.get::<VelloScene>(e))
-        {
-            let gpu_image = gpu_images.get(image).unwrap();
-            let auxiliary_texture_view = context
-                .auxiliary_texture
-                .create_view(&TextureViewDescriptor::default());
-
-            context
-                .renderer
-                .render_to_texture(
-                    device.wgpu_device(),
-                    &queue,
-                    &scene,
-                    &auxiliary_texture_view,
-                    &RenderParams {
-                        base_color: vello::peniko::Color::TRANSPARENT,
-                        width: gpu_image.size.x as u32,
-                        height: gpu_image.size.y as u32,
-                    },
-                )
-                .unwrap();
-
-            let mut encoder =
-                device.create_command_encoder(&CommandEncoderDescriptor { label: None });
-
-            encoder.copy_texture_to_texture(
-                ImageCopyTexture {
-                    texture: &context.auxiliary_texture,
-                    mip_level: 0,
-                    origin: Origin3d::ZERO,
-                    aspect: TextureAspect::All,
-                },
-                ImageCopyTexture {
-                    texture: &gpu_image.texture,
-                    mip_level: 0,
-                    origin: Origin3d::ZERO,
-                    aspect: TextureAspect::All,
-                },
-                gpu_image.texture.size(),
-            );
-
-            queue.submit(Some(encoder.finish()));
-
-            context.has_renderered_this_frame = true;
-        }
-
-        Ok(())
-    }
-
-    fn update(&mut self, world: &mut World) {
-        let context = world.resource::<VelloContext>().inner.clone();
-        let mut context = context.lock().unwrap();
-
-        if context.has_renderered_this_frame {
-            return;
-        }
-
-        let max_size = world.query::<&VelloScene>().iter(world).fold(
-            Extent3d::default(),
-            |mut size, vello_scene| {
-                size.width = size.width.max(vello_scene.width.next_power_of_two());
-                size.height = size.height.max(vello_scene.height.next_power_of_two());
-
-                size
-            },
-        );
-
-        if context.auxiliary_texture.width() != max_size.width
-            || context.auxiliary_texture.height() != max_size.height
-        {
-            let device = world.resource::<RenderDevice>();
-
-            context.auxiliary_texture.destroy();
-            context.auxiliary_texture = device.create_texture(&TextureDescriptor {
-                label: None,
-                size: max_size,
-                mip_level_count: 1,
-                sample_count: 1,
-                dimension: TextureDimension::D2,
-                format: TextureFormat::Rgba8Unorm,
-                usage: TextureUsages::STORAGE_BINDING | TextureUsages::COPY_SRC,
-                view_formats: &[],
-            })
-        }
-
-        self.scene_entities.clear();
-        self.scene_entities.extend(
-            world
-                .query_filtered::<Entity, With<VelloScene>>()
-                .iter(world),
-        );
-    }
-}
-
 pub struct RivePlugin;
 
 impl Plugin for RivePlugin {
@@ -490,17 +306,17 @@ impl Plugin for RivePlugin {
         };
 
         render_app
-            .init_resource::<VelloContext>()
+            .init_resource::<node::VelloContext>()
             .add_systems(Render, reset_renderer.in_set(RenderSet::Cleanup))
-            .add_render_graph_node::<VelloNode>(core_2d::graph::NAME, VelloNode::NAME)
+            .add_render_graph_node::<node::VelloNode>(core_2d::graph::NAME, node::VelloNode::NAME)
             .add_render_graph_edges(
                 core_2d::graph::NAME,
-                &[VelloNode::NAME, core_2d::graph::node::MAIN_PASS],
+                &[node::VelloNode::NAME, core_2d::graph::node::MAIN_PASS],
             )
-            .add_render_graph_node::<VelloNode>(core_3d::graph::NAME, VelloNode::NAME)
+            .add_render_graph_node::<node::VelloNode>(core_3d::graph::NAME, node::VelloNode::NAME)
             .add_render_graph_edges(
                 core_3d::graph::NAME,
-                &[VelloNode::NAME, core_3d::graph::node::START_MAIN_PASS],
+                &[node::VelloNode::NAME, core_3d::graph::node::START_MAIN_PASS],
             );
     }
 }
