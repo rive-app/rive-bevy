@@ -4,11 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# bevy = { git = "https://github.com/Elabajaba/bevy", rev = "5ecefbb" }
 bevy = { git = "https://github.com/dragostis/bevy", features = ["filesystem_watcher"]}
 etagere = "0.2.8"
-# rive-rs = { git = "https://github.com/rive-app/rive-rs", features = ["vello"] }
-rive-rs = { path = "../rive/packages/rive_rs", features = ["vello"] }
+rive-rs = { git = "https://github.com/rive-app/rive-rs", features = ["vello"] }
 vello = { git = "https://github.com/linebender/vello", rev = "ee3a076" }
 
 [profile.dev]

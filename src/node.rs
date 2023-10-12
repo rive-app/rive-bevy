@@ -218,7 +218,6 @@ impl Node for VelloNode {
             .unwrap();
 
         let atlas = context.atlas.as_ref().unwrap();
-        let mut encoder = device.create_command_encoder(&CommandEncoderDescriptor { label: None });
 
         for (entity, VelloScene { image_handle, .. }) in self
             .scene_entities
@@ -229,7 +228,7 @@ impl Node for VelloNode {
             let gpu_image = gpu_images.get(image_handle).unwrap();
             let rect = atlas.get(entity);
 
-            encoder.copy_texture_to_texture(
+            render_context.command_encoder().copy_texture_to_texture(
                 ImageCopyTexture {
                     texture: &context.atlas_texture,
                     mip_level: 0,
@@ -249,8 +248,6 @@ impl Node for VelloNode {
                 gpu_image.texture.size(),
             );
         }
-
-        queue.submit(Some(encoder.finish()));
 
         context.has_renderered_this_frame = true;
 
