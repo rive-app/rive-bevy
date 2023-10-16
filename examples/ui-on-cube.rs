@@ -149,7 +149,7 @@ fn rotate_cube(time: Res<Time>, mut query: Query<&mut Transform, With<DefaultCub
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(AssetPlugin::default().watch_for_changes()))
+        .add_plugins(DefaultPlugins.set(AssetPlugin::default()))
         .add_plugins(RivePlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, rotate_cube)
