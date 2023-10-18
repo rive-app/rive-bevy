@@ -3,12 +3,13 @@ use std::sync::Arc;
 use bevy::{prelude::*, render::extract_component::ExtractComponent};
 use vello::SceneFragment;
 
-use crate::assets::Artboard;
+use crate::Riv;
 
 #[derive(Clone, Component, Debug, Default)]
 pub struct LinearAnimation {
-    pub artboard: Handle<Artboard>,
-    pub index: Option<usize>,
+    pub riv: Handle<Riv>,
+    pub artboard_handle: rive_rs::Handle,
+    pub handle: rive_rs::Handle,
     pub sprite_entity: Option<Entity>,
 }
 
@@ -17,8 +18,9 @@ pub struct RiveLinearAnimation(pub rive_rs::LinearAnimation);
 
 #[derive(Clone, Component, Debug, Default)]
 pub struct StateMachine {
-    pub artboard: Handle<Artboard>,
-    pub index: Option<usize>,
+    pub riv: Handle<Riv>,
+    pub artboard_handle: rive_rs::Handle,
+    pub handle: rive_rs::Handle,
     pub sprite_entity: Option<Entity>,
 }
 

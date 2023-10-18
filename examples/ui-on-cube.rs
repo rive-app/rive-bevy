@@ -68,8 +68,7 @@ fn setup(
 
     commands
         .spawn(LinearAnimation {
-            // We can select the Artboard direclty from the .riv.
-            artboard: asset_server.load("marty.riv#Artboard0"),
+            riv: asset_server.load("marty.riv"),
             ..default()
         })
         .insert(SceneTarget {
@@ -102,7 +101,7 @@ fn setup(
 
     commands
         .spawn(StateMachine {
-            artboard: asset_server.load("rating-animation.riv#Artboard0"),
+            riv: asset_server.load("rating-animation.riv"),
             ..default()
         })
         .insert(SceneTarget {
@@ -112,32 +111,6 @@ fn setup(
                 entity: Some(sprite_entity),
             },
         });
-
-    {
-        let rect_image_handle2 = images.add(cube_image.clone());
-
-        let sprite_entity2 = commands
-            .spawn(SpriteBundle {
-                texture: rect_image_handle2.clone(),
-                transform: Transform::from_scale(Vec3::splat(0.5))
-                    .with_translation(Vec3::new(250.0, 0.0, 0.0)),
-                ..default()
-            })
-            .id();
-
-        commands
-            .spawn(StateMachine {
-                artboard: asset_server.load("rating-animation.riv#Artboard0"),
-                ..default()
-            })
-            .insert(SceneTarget {
-                image: rect_image_handle2,
-                // Adding the sprite here enables mouse input being passed to the Scene.
-                sprite: SpriteEntity {
-                    entity: Some(sprite_entity2),
-                },
-            });
-    }
 }
 
 fn rotate_cube(time: Res<Time>, mut query: Query<&mut Transform, With<DefaultCube>>) {

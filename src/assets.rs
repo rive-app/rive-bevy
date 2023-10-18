@@ -7,12 +7,9 @@ use bevy::{
         BoxedFuture,
     },
 };
-use rive_rs::{File, Instantiate};
+use rive_rs::File;
 
-#[derive(Asset, Deref, TypePath)]
-pub struct Artboard(pub rive_rs::Artboard);
-
-#[derive(Asset, TypePath)]
+#[derive(Asset, Debug, Deref, TypePath)]
 pub struct Riv(pub rive_rs::File);
 
 #[derive(Debug, Error)]
@@ -37,20 +34,12 @@ impl AssetLoader for RivLoader {
         &'a self,
         reader: &'a mut Reader,
         _settings: &'a Self::Settings,
-        load_context: &'a mut LoadContext,
+        _load_context: &'a mut LoadContext,
     ) -> BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
             let mut bytes = Vec::new();
             reader.read_to_end(&mut bytes).await?;
             let file = File::new(&bytes)?;
-
-            let mut artboards = (0..)
-                .into_iter()
-                .map(|i| rive_rs::Artboard::instantiate(&file, Some(i)).map(|a| (i, a)));
-
-            while let Some((i, artboard)) = artboards.next().flatten() {
-                load_context.add_labeled_asset(format!("Artboard{}", i), Artboard(artboard));
-            }
 
             Ok(Riv(file))
         })

@@ -12,7 +12,7 @@ use bevy::{
 use rive_rs::Instantiate;
 
 use crate::{
-    assets::{self, Artboard, Riv, RivLoader},
+    assets::{self, Riv, RivLoader},
     components::{
         LinearAnimation, RiveLinearAnimation, RiveStateMachine, SpriteEntity, StateMachine,
         VelloFragment, VelloScene, Viewport,
@@ -72,25 +72,29 @@ fn resize_viewports(
 }
 
 #[derive(Debug, Default, Deref, DerefMut, Resource)]
-struct ArtboardEntities(HashMap<AssetId<assets::Artboard>, Entity>);
+struct RivEntities(HashMap<AssetId<assets::Riv>, Entity>);
 
 fn instantiate_linear_animations(
     mut commands: Commands,
     query: Query<(Entity, &LinearAnimation), Without<RiveLinearAnimation>>,
-    artboard_assets: Res<Assets<assets::Artboard>>,
-    mut artboard_entities: ResMut<ArtboardEntities>,
+    riv_assets: Res<Assets<assets::Riv>>,
+    mut riv_entities: ResMut<RivEntities>,
 ) {
     for (entity, linear_animation) in &query {
-        if let Some(artboard) = artboard_assets.get(&linear_animation.artboard) {
-            let handle = linear_animation.artboard.clone();
+        if let Some(riv) = riv_assets.get(&linear_animation.riv) {
+            let handle = linear_animation.riv.clone();
+            let artboard =
+                rive_rs::Artboard::instantiate(riv, linear_animation.artboard_handle.clone())
+                    .unwrap();
             let linear_animation =
-                rive_rs::LinearAnimation::instantiate(&artboard, linear_animation.index).unwrap();
+                rive_rs::LinearAnimation::instantiate(&artboard, linear_animation.handle.clone())
+                    .unwrap();
 
             commands
                 .entity(entity)
                 .insert(RiveLinearAnimation(linear_animation));
 
-            artboard_entities.insert(handle.id(), entity);
+            riv_entities.insert(handle.id(), entity);
         }
     }
 }
@@ -98,39 +102,42 @@ fn instantiate_linear_animations(
 fn instantiate_state_machines(
     mut commands: Commands,
     query: Query<(Entity, &StateMachine), Without<RiveStateMachine>>,
-    artboard_assets: Res<Assets<assets::Artboard>>,
-    mut artboard_entities: ResMut<ArtboardEntities>,
+    riv_assets: Res<Assets<assets::Riv>>,
+    mut riv_entities: ResMut<RivEntities>,
 ) {
     for (entity, state_machine) in &query {
-        if let Some(artboard) = artboard_assets.get(&state_machine.artboard) {
-            let handle = state_machine.artboard.clone();
+        if let Some(riv) = riv_assets.get(&state_machine.riv) {
+            let handle = state_machine.riv.clone();
+            let artboard =
+                rive_rs::Artboard::instantiate(riv, state_machine.artboard_handle.clone()).unwrap();
             let state_machine =
-                rive_rs::StateMachine::instantiate(&artboard, state_machine.index).unwrap();
+                rive_rs::StateMachine::instantiate(&artboard, state_machine.handle.clone())
+                    .unwrap();
 
             commands
                 .entity(entity)
                 .insert(RiveStateMachine(state_machine));
 
-            artboard_entities.insert(handle.id(), entity);
+            riv_entities.insert(handle.id(), entity);
         }
     }
 }
 
 fn reinstantiate_linear_animations(
     mut commands: Commands,
-    mut asset_events: EventReader<AssetEvent<assets::Artboard>>,
-    mut artboard_entities: ResMut<ArtboardEntities>,
+    mut asset_events: EventReader<AssetEvent<assets::Riv>>,
+    mut riv_entities: ResMut<RivEntities>,
 ) {
     for event in asset_events.read() {
         match event {
             AssetEvent::Modified { id } => {
                 commands
-                    .entity(*artboard_entities.get(id).unwrap())
+                    .entity(*riv_entities.get(id).unwrap())
                     .remove::<RiveLinearAnimation>()
                     .remove::<RiveStateMachine>();
             }
             AssetEvent::Removed { id } => {
-                artboard_entities.remove(&id);
+                riv_entities.remove(&id);
             }
             _ => (),
         }
@@ -272,10 +279,9 @@ pub struct RivePlugin;
 
 impl Plugin for RivePlugin {
     fn build(&self, app: &mut App) {
-        app.init_asset::<Artboard>()
-            .init_asset::<Riv>()
+        app.init_asset::<Riv>()
             .init_asset_loader::<RivLoader>()
-            .init_resource::<ArtboardEntities>()
+            .init_resource::<RivEntities>()
             .add_event::<Input>()
             .add_event::<GenericEvent>()
             .add_systems(

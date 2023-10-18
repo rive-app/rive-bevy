@@ -5,10 +5,11 @@ mod node;
 mod plugin;
 
 pub use crate::{
-    assets::{Artboard, Riv},
+    assets::Riv,
     components::{
         LinearAnimation, RiveLinearAnimation, RiveStateMachine, SceneTarget, SpriteEntity,
         StateMachine,
     },
     plugin::RivePlugin,
 };
+pub use rive_rs::Handle;
