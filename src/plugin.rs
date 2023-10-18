@@ -182,8 +182,14 @@ fn pass_pointer_events(
         let scaled_image_dimension = image_dimensions * transform.scale.truncate();
         let bounding_box =
             Rect::from_center_size(transform.translation.truncate(), scaled_image_dimension);
-        let get_relative_pos =
-            |world_pos| (world_pos - bounding_box.min) / transform.scale.truncate();
+        let get_relative_pos = |world_pos| {
+            let mut pos: Vec2 = world_pos - bounding_box.min;
+            // Flip y since the Y axis points down in Rive.
+            pos.y = bounding_box.height() - pos.y;
+            pos /= transform.scale.truncate();
+
+            pos
+        };
 
         for cursor_moved in &cursor_moved_events {
             if let Some(world_pos) = get_world_pos(cursor_moved.position) {
