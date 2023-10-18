@@ -39,9 +39,8 @@ impl AssetLoader for RivLoader {
         Box::pin(async move {
             let mut bytes = Vec::new();
             reader.read_to_end(&mut bytes).await?;
-            let file = File::new(&bytes)?;
 
-            Ok(Riv(file))
+            Ok(Riv(File::new(&bytes)?))
         })
     }
 

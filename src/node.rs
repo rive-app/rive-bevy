@@ -20,14 +20,27 @@ use vello::{kurbo::Affine, RenderParams, Renderer, RendererOptions, SceneBuilder
 
 use crate::components::VelloScene;
 
+struct Sizes<'w> {
+    world: &'w World,
+    query_state: QueryState<(Entity, &'static VelloScene), ()>,
+}
+
+impl Sizes<'_> {
+    pub fn iter(&mut self) -> impl Iterator<Item = (Entity, u32, u32)> + '_ {
+        self.query_state
+            .iter(self.world)
+            .map(|(e, s)| (e, s.width, s.height))
+    }
+}
+
 struct VelloAtlas {
     atlas_alloc: AtlasAllocator,
     alloc_ids: HashMap<Entity, AllocId>,
 }
 
 impl VelloAtlas {
-    fn required_size(sizes: impl Iterator<Item = (Entity, u32, u32)>) -> u32 {
-        let total_area: u32 = sizes.map(|(_, w, h)| w * h).sum();
+    fn required_size(sizes: &mut Sizes) -> u32 {
+        let total_area: u32 = sizes.iter().map(|(_, w, h)| w * h).sum();
 
         let theoretical_min_size = (total_area as f32).sqrt().ceil() as u32;
         let mut size = theoretical_min_size.next_power_of_two();
@@ -39,7 +52,7 @@ impl VelloAtlas {
         size
     }
 
-    pub fn new(sizes: impl Iterator<Item = (Entity, u32, u32)>) -> Self {
+    pub fn new(sizes: &mut Sizes) -> Self {
         let size = Self::required_size(sizes);
 
         Self {
@@ -61,20 +74,7 @@ impl VelloAtlas {
         self.atlas_alloc = AtlasAllocator::new(Size2D::new(size as i32, size as i32));
     }
 
-    fn allocate_or_resize(&mut self, width: u32, height: u32) -> AllocId {
-        loop {
-            if let Some(Allocation { id, .. }) = self
-                .atlas_alloc
-                .allocate(Size2D::new(width as i32, height as i32))
-            {
-                break id;
-            }
-
-            self.resize(2 * self.atlas_alloc.size().width as u32);
-        }
-    }
-
-    pub fn update_size(&mut self, sizes: impl Iterator<Item = (Entity, u32, u32)>) {
+    pub fn update_size(&mut self, sizes: &mut Sizes) {
         let required_size = Self::required_size(sizes);
         let current_size = self.atlas_alloc.size().width as u32;
         let current_area = current_size * current_size;
@@ -84,11 +84,29 @@ impl VelloAtlas {
         }
     }
 
-    pub fn allocate_all(&mut self, sizes: impl Iterator<Item = (Entity, u32, u32)>) {
-        for (entity, width, height) in sizes {
-            if !self.alloc_ids.contains_key(&entity) {
-                let id = self.allocate_or_resize(width, height);
-                self.alloc_ids.insert(entity, id);
+    pub fn allocate_all(&mut self, sizes: &mut Sizes) {
+        let mut was_resized;
+        loop {
+            was_resized = false;
+
+            for (entity, width, height) in sizes.iter() {
+                if !self.alloc_ids.contains_key(&entity) {
+                    if let Some(Allocation { id, .. }) = self
+                        .atlas_alloc
+                        .allocate(Size2D::new(width as i32, height as i32))
+                    {
+                        self.alloc_ids.insert(entity, id);
+                    } else {
+                        self.resize(2 * self.atlas_alloc.size().width as u32);
+
+                        was_resized = true;
+                        break;
+                    }
+                }
+            }
+
+            if !was_resized {
+                break;
             }
         }
     }
@@ -261,35 +279,20 @@ impl Node for VelloNode {
             return;
         }
 
+        let query_state = world.query::<(Entity, &VelloScene)>();
+        let mut sizes = Sizes { world, query_state };
+
         let mut skip_update_size = true;
         let atlas = context.atlas.get_or_insert_with(|| {
             skip_update_size = true;
-            VelloAtlas::new(
-                world
-                    .query::<(Entity, &VelloScene)>()
-                    .iter(world)
-                    .into_iter()
-                    .map(|(e, s)| (e, s.width, s.height)),
-            )
+            VelloAtlas::new(&mut sizes)
         });
 
         if !skip_update_size {
-            atlas.update_size(
-                world
-                    .query::<(Entity, &VelloScene)>()
-                    .iter(world)
-                    .into_iter()
-                    .map(|(e, s)| (e, s.width, s.height)),
-            );
+            atlas.update_size(&mut sizes);
         }
 
-        atlas.allocate_all(
-            world
-                .query::<(Entity, &VelloScene)>()
-                .iter(world)
-                .into_iter()
-                .map(|(e, s)| (e, s.width, s.height)),
-        );
+        atlas.allocate_all(&mut sizes);
 
         let atlas_size = Extent3d {
             width: atlas.width(),
