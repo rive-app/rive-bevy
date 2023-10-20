@@ -149,7 +149,7 @@ impl FromWorld for VelloContext {
                         use_cpu: false,
                     },
                 )
-                .unwrap(),
+                .expect("failed to crate Vello renderer"),
                 atlas: None,
                 atlas_texture: device.create_texture(&TextureDescriptor {
                     label: None,
@@ -232,7 +232,7 @@ impl Node for VelloNode {
                     height: max_size.1,
                 },
             )
-            .unwrap();
+            .expect("failed to render with Vello");
 
         let atlas = context.atlas.as_ref().unwrap();
 

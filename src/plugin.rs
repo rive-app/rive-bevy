@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 use bevy::{
     core_pipeline::{core_2d, core_3d},
@@ -8,6 +8,7 @@ use bevy::{
         extract_component::ExtractComponentPlugin, render_graph::RenderGraphApp, Render, RenderApp,
         RenderSet,
     },
+    utils::HashMap,
 };
 use rive_rs::Instantiate;
 
@@ -34,6 +35,18 @@ macro_rules! get_scene_or_continue {
             _ => continue,
         }
     }};
+}
+
+macro_rules! get_or_continue_with_error {
+    ( $val:expr, $( $tail:tt )* ) => {
+        match $val {
+            Some(val) => val,
+            None => {
+                error!($($tail)*);
+                continue;
+            }
+        }
+    };
 }
 
 fn insert_deafult_viewports(
@@ -83,12 +96,19 @@ fn instantiate_linear_animations(
     for (entity, linear_animation) in &query {
         if let Some(riv) = riv_assets.get(&linear_animation.riv) {
             let handle = linear_animation.riv.clone();
-            let artboard =
-                rive_rs::Artboard::instantiate(riv, linear_animation.artboard_handle.clone())
-                    .unwrap();
-            let linear_animation =
-                rive_rs::LinearAnimation::instantiate(&artboard, linear_animation.handle.clone())
-                    .unwrap();
+            let artboard = get_or_continue_with_error!(
+                rive_rs::Artboard::instantiate(riv, linear_animation.artboard_handle.clone()),
+                "artboard {:?} cannot be found in {:?}",
+                linear_animation.artboard_handle,
+                riv,
+            );
+
+            let linear_animation = get_or_continue_with_error!(
+                rive_rs::LinearAnimation::instantiate(&artboard, linear_animation.handle.clone()),
+                "linear animation {:?} cannot be found in {:?}",
+                linear_animation.handle,
+                riv,
+            );
 
             commands
                 .entity(entity)
@@ -108,11 +128,18 @@ fn instantiate_state_machines(
     for (entity, state_machine) in &query {
         if let Some(riv) = riv_assets.get(&state_machine.riv) {
             let handle = state_machine.riv.clone();
-            let artboard =
-                rive_rs::Artboard::instantiate(riv, state_machine.artboard_handle.clone()).unwrap();
-            let state_machine =
-                rive_rs::StateMachine::instantiate(&artboard, state_machine.handle.clone())
-                    .unwrap();
+            let artboard = get_or_continue_with_error!(
+                rive_rs::Artboard::instantiate(riv, state_machine.artboard_handle.clone()),
+                "artboard {:?} cannot be found in {:?}",
+                state_machine.artboard_handle,
+                riv,
+            );
+            let state_machine = get_or_continue_with_error!(
+                rive_rs::StateMachine::instantiate(&artboard, state_machine.handle.clone()),
+                "state machine {:?} cannot be found in {:?}",
+                state_machine.handle,
+                riv,
+            );
 
             commands
                 .entity(entity)
@@ -137,7 +164,7 @@ fn reinstantiate_linear_animations(
                     .remove::<RiveStateMachine>();
             }
             AssetEvent::Removed { id } => {
-                riv_entities.remove(&id);
+                riv_entities.remove(id);
             }
             _ => (),
         }
@@ -228,9 +255,27 @@ fn pass_state_machine_input_events(
     for input in input_events.read() {
         if let Ok(state_machine) = query.get_mut(input.state_machine) {
             match input.value {
-                InputValue::Bool(val) => state_machine.get_bool(&input.name).unwrap().set(val),
-                InputValue::Number(val) => state_machine.get_number(&input.name).unwrap().set(val),
-                InputValue::Trigger => state_machine.get_trigger(&input.name).unwrap().fire(),
+                InputValue::Bool(val) => get_or_continue_with_error!(
+                    state_machine.get_bool(&input.name),
+                    "input with name {:?} cannot be found in {:?}",
+                    input.name,
+                    input.state_machine,
+                )
+                .set(val),
+                InputValue::Number(val) => get_or_continue_with_error!(
+                    state_machine.get_number(&input.name),
+                    "input with name {:?} cannot be found in {:?}",
+                    input.name,
+                    input.state_machine,
+                )
+                .set(val),
+                InputValue::Trigger => get_or_continue_with_error!(
+                    state_machine.get_trigger(&input.name),
+                    "input with name {:?} cannot be found in {:?}",
+                    input.name,
+                    input.state_machine,
+                )
+                .fire(),
             }
         }
     }
