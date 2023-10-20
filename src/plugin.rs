@@ -15,8 +15,9 @@ use rive_rs::Instantiate;
 use crate::{
     assets::{self, Riv, RivLoader},
     components::{
-        LinearAnimation, RiveLinearAnimation, RiveStateMachine, SpriteEntity, StateMachine,
-        VelloFragment, VelloScene, Viewport,
+        LinearAnimation, MissingArtboard, MissingLinearAnimation, MissingStateMachine,
+        RiveLinearAnimation, RiveStateMachine, SpriteEntity, StateMachine, VelloFragment,
+        VelloScene, Viewport,
     },
     events::{GenericEvent, Input, InputValue},
     node,
@@ -89,26 +90,61 @@ struct RivEntities(HashMap<AssetId<assets::Riv>, Entity>);
 
 fn instantiate_linear_animations(
     mut commands: Commands,
-    query: Query<(Entity, &LinearAnimation), Without<RiveLinearAnimation>>,
+    query: Query<
+        (
+            Entity,
+            &LinearAnimation,
+            Option<&MissingArtboard>,
+            Option<&MissingLinearAnimation>,
+        ),
+        Without<RiveLinearAnimation>,
+    >,
     riv_assets: Res<Assets<assets::Riv>>,
     mut riv_entities: ResMut<RivEntities>,
 ) {
-    for (entity, linear_animation) in &query {
+    for (entity, linear_animation, missing_artboard, missing_linear_animation) in &query {
         if let Some(riv) = riv_assets.get(&linear_animation.riv) {
             let handle = linear_animation.riv.clone();
-            let artboard = get_or_continue_with_error!(
-                rive_rs::Artboard::instantiate(riv, linear_animation.artboard_handle.clone()),
-                "artboard {:?} cannot be found in {:?}",
-                linear_animation.artboard_handle,
-                riv,
-            );
+            let artboard =
+                match rive_rs::Artboard::instantiate(riv, linear_animation.artboard_handle.clone())
+                {
+                    Some(artboard) => artboard,
+                    None => {
+                        if missing_artboard.is_none() {
+                            commands.entity(entity).insert(MissingArtboard);
 
-            let linear_animation = get_or_continue_with_error!(
-                rive_rs::LinearAnimation::instantiate(&artboard, linear_animation.handle.clone()),
-                "linear animation {:?} cannot be found in {:?}",
-                linear_animation.handle,
-                riv,
-            );
+                            error!(
+                                "artboard {:?} cannot be found in {:?}",
+                                linear_animation.artboard_handle, riv,
+                            );
+                        }
+
+                        continue;
+                    }
+                };
+
+            commands.entity(entity).remove::<MissingArtboard>();
+
+            let linear_animation = match rive_rs::LinearAnimation::instantiate(
+                &artboard,
+                linear_animation.handle.clone(),
+            ) {
+                Some(linear_animation) => linear_animation,
+                None => {
+                    if missing_linear_animation.is_none() {
+                        commands.entity(entity).insert(MissingLinearAnimation);
+
+                        error!(
+                            "linear animation {:?} cannot be found in {:?}",
+                            linear_animation.handle, riv,
+                        );
+                    }
+
+                    continue;
+                }
+            };
+
+            commands.entity(entity).remove::<MissingLinearAnimation>();
 
             commands
                 .entity(entity)
@@ -121,25 +157,58 @@ fn instantiate_linear_animations(
 
 fn instantiate_state_machines(
     mut commands: Commands,
-    query: Query<(Entity, &StateMachine), Without<RiveStateMachine>>,
+    query: Query<
+        (
+            Entity,
+            &StateMachine,
+            Option<&MissingArtboard>,
+            Option<&MissingStateMachine>,
+        ),
+        Without<RiveStateMachine>,
+    >,
     riv_assets: Res<Assets<assets::Riv>>,
     mut riv_entities: ResMut<RivEntities>,
 ) {
-    for (entity, state_machine) in &query {
+    for (entity, state_machine, missing_artboard, missing_state_machine) in &query {
         if let Some(riv) = riv_assets.get(&state_machine.riv) {
             let handle = state_machine.riv.clone();
-            let artboard = get_or_continue_with_error!(
-                rive_rs::Artboard::instantiate(riv, state_machine.artboard_handle.clone()),
-                "artboard {:?} cannot be found in {:?}",
-                state_machine.artboard_handle,
-                riv,
-            );
-            let state_machine = get_or_continue_with_error!(
-                rive_rs::StateMachine::instantiate(&artboard, state_machine.handle.clone()),
-                "state machine {:?} cannot be found in {:?}",
-                state_machine.handle,
-                riv,
-            );
+            let artboard =
+                match rive_rs::Artboard::instantiate(riv, state_machine.artboard_handle.clone()) {
+                    Some(artboard) => artboard,
+                    None => {
+                        if missing_artboard.is_none() {
+                            commands.entity(entity).insert(MissingArtboard);
+
+                            error!(
+                                "artboard {:?} cannot be found in {:?}",
+                                state_machine.artboard_handle, riv,
+                            );
+                        }
+
+                        continue;
+                    }
+                };
+
+            commands.entity(entity).remove::<MissingArtboard>();
+
+            let state_machine =
+                match rive_rs::StateMachine::instantiate(&artboard, state_machine.handle.clone()) {
+                    Some(state_machine) => state_machine,
+                    None => {
+                        if missing_state_machine.is_none() {
+                            commands.entity(entity).insert(MissingStateMachine);
+
+                            error!(
+                                "linear animation {:?} cannot be found in {:?}",
+                                state_machine.handle, riv,
+                            );
+                        }
+
+                        continue;
+                    }
+                };
+
+            commands.entity(entity).remove::<MissingStateMachine>();
 
             commands
                 .entity(entity)

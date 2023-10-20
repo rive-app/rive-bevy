@@ -27,6 +27,15 @@ pub struct StateMachine {
 #[derive(Component, Debug, Deref, DerefMut)]
 pub struct RiveStateMachine(pub rive_rs::StateMachine);
 
+#[derive(Component, Debug)]
+pub(crate) struct MissingArtboard;
+
+#[derive(Component, Debug)]
+pub(crate) struct MissingLinearAnimation;
+
+#[derive(Component, Debug)]
+pub(crate) struct MissingStateMachine;
+
 #[derive(Clone, Component, Debug, Default, Deref, DerefMut)]
 pub struct Viewport(pub rive_rs::Viewport);
 
