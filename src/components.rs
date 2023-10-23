@@ -40,6 +40,11 @@ pub(crate) struct MissingStateMachine;
 pub struct Viewport(pub rive_rs::Viewport);
 
 #[derive(Clone, Component, Debug, Default, Deref)]
+pub struct MeshEntity {
+    pub entity: Option<Entity>,
+}
+
+#[derive(Clone, Component, Debug, Default, Deref)]
 pub struct SpriteEntity {
     pub entity: Option<Entity>,
 }
@@ -48,6 +53,7 @@ pub struct SpriteEntity {
 pub struct SceneTarget {
     pub image: Handle<Image>,
     pub sprite: SpriteEntity,
+    pub mesh: MeshEntity,
 }
 
 #[derive(Component, Deref)]
