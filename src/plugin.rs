@@ -254,7 +254,10 @@ fn pass_pointer_events(
     mut mouse_button_input_events: EventReader<MouseButtonInput>,
     windows: Query<&Window>,
 ) {
-    let (camera, camera_transform) = camera.single();
+    let Ok((camera, camera_transform)) = camera.get_single() else {
+        return;
+    };
+    
     let get_world_pos = |cursor_position| {
         camera
             .viewport_to_world(camera_transform, cursor_position)
