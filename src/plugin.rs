@@ -24,8 +24,8 @@ use crate::{
     node,
 };
 
-macro_rules! get_scene_or_continue {
-    ( $linear_animation:expr, $state_machine:expr ) => {{
+macro_rules! get_scene_or {
+    ( $keyword:tt, $linear_animation:expr, $state_machine:expr ) => {{
         let linear_animation = $linear_animation
             .map(|la| la.map_unchanged(|la| (&mut **la) as &mut dyn rive_rs::Scene));
         let state_machine =
@@ -34,22 +34,7 @@ macro_rules! get_scene_or_continue {
         match (linear_animation, state_machine) {
             (Some(linear_animation), None) => linear_animation,
             (None, Some(state_machine)) => state_machine,
-            _ => continue,
-        }
-    }};
-}
-
-macro_rules! get_scene_or_return {
-    ( $linear_animation:expr, $state_machine:expr ) => {{
-        let linear_animation = $linear_animation
-            .map(|la| la.map_unchanged(|la| (&mut **la) as &mut dyn rive_rs::Scene));
-        let state_machine =
-            $state_machine.map(|sm| sm.map_unchanged(|sm| (&mut **sm) as &mut dyn rive_rs::Scene));
-
-        match (linear_animation, state_machine) {
-            (Some(linear_animation), None) => linear_animation,
-            (None, Some(state_machine)) => state_machine,
-            _ => return,
+            _ => $keyword,
         }
     }};
 }
@@ -283,7 +268,7 @@ fn pass_pointer_events(
     let mouse_button_input_events: Vec<_> = mouse_button_input_events.read().collect();
 
     for (linear_animation, state_machine, sprite_entity, viewport) in &mut scenes {
-        let mut scene = get_scene_or_continue!(linear_animation, state_machine);
+        let mut scene = get_scene_or!(continue, linear_animation, state_machine);
 
         let Some((transform, image_handle)) = sprite_entity
             .entity
@@ -388,7 +373,7 @@ fn render_rive_scenes(
         .batching_strategy(BatchingStrategy::new().max_batch_size(MAX_SCENES_PER_CORE))
         .for_each(|(entity, linear_animation, state_machine, mut viewport)| {
             let mut renderer = rive_rs::Renderer::default();
-            let mut scene = get_scene_or_return!(linear_animation, state_machine);
+            let mut scene = get_scene_or!(return, linear_animation, state_machine);
 
             par_commands.command_scope(|mut commands| {
                 if scene.advance_and_maybe_draw(&mut renderer, elapsed, &mut viewport) {
