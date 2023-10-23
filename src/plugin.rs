@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use bevy::{
     core_pipeline::{core_2d, core_3d},
+    ecs::query::BatchingStrategy,
     input::{mouse::MouseButtonInput, ButtonState},
     prelude::*,
     render::{
@@ -34,6 +35,21 @@ macro_rules! get_scene_or_continue {
             (Some(linear_animation), None) => linear_animation,
             (None, Some(state_machine)) => state_machine,
             _ => continue,
+        }
+    }};
+}
+
+macro_rules! get_scene_or_return {
+    ( $linear_animation:expr, $state_machine:expr ) => {{
+        let linear_animation = $linear_animation
+            .map(|la| la.map_unchanged(|la| (&mut **la) as &mut dyn rive_rs::Scene));
+        let state_machine =
+            $state_machine.map(|sm| sm.map_unchanged(|sm| (&mut **sm) as &mut dyn rive_rs::Scene));
+
+        match (linear_animation, state_machine) {
+            (Some(linear_animation), None) => linear_animation,
+            (None, Some(state_machine)) => state_machine,
+            _ => return,
         }
     }};
 }
@@ -257,7 +273,7 @@ fn pass_pointer_events(
     let Ok((camera, camera_transform)) = camera.get_single() else {
         return;
     };
-    
+
     let get_world_pos = |cursor_position| {
         camera
             .viewport_to_world(camera_transform, cursor_position)
@@ -355,7 +371,7 @@ fn pass_state_machine_input_events(
 
 fn render_rive_scenes(
     time: Res<Time>,
-    mut commands: Commands,
+    par_commands: ParallelCommands,
     mut query: Query<(
         Entity,
         Option<&mut RiveLinearAnimation>,
@@ -363,20 +379,27 @@ fn render_rive_scenes(
         &mut Viewport,
     )>,
 ) {
+    const MAX_SCENES_PER_CORE: usize = 8;
+
     let elapsed = time.delta();
 
-    for (entity, linear_animation, state_machine, mut viewport) in &mut query {
-        let mut renderer = rive_rs::Renderer::default();
-        let mut scene = get_scene_or_continue!(linear_animation, state_machine);
+    query
+        .par_iter_mut()
+        .batching_strategy(BatchingStrategy::new().max_batch_size(MAX_SCENES_PER_CORE))
+        .for_each(|(entity, linear_animation, state_machine, mut viewport)| {
+            let mut renderer = rive_rs::Renderer::default();
+            let mut scene = get_scene_or_return!(linear_animation, state_machine);
 
-        if scene.advance_and_maybe_draw(&mut renderer, elapsed, &mut viewport) {
-            commands
-                .entity(entity)
-                .insert(VelloFragment(Arc::new(renderer.into_scene())));
-        } else {
-            commands.entity(entity).remove::<VelloFragment>();
-        }
-    }
+            par_commands.command_scope(|mut commands| {
+                if scene.advance_and_maybe_draw(&mut renderer, elapsed, &mut viewport) {
+                    commands
+                        .entity(entity)
+                        .insert(VelloFragment(Arc::new(renderer.into_scene())));
+                } else {
+                    commands.entity(entity).remove::<VelloFragment>();
+                }
+            });
+        });
 }
 
 fn send_generic_events(
