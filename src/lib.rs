@@ -3,6 +3,7 @@ mod components;
 pub mod events;
 mod node;
 mod plugin;
+mod pointer_events;
 
 pub use crate::{
     assets::Riv,

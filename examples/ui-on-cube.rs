@@ -110,6 +110,7 @@ fn setup(
             sprite: SpriteEntity {
                 entity: Some(sprite_entity),
             },
+            ..default()
         });
 }
 
