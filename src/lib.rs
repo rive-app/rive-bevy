@@ -11,6 +11,7 @@ pub use crate::{
         LinearAnimation, MeshEntity, RiveLinearAnimation, RiveStateMachine, SceneTarget,
         SpriteEntity, StateMachine,
     },
+    events::GenericEvent,
     plugin::RivePlugin,
 };
 pub use rive_rs::Handle;
