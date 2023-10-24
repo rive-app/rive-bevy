@@ -1,9 +1,10 @@
 //! An example showcasing how to manipulate Rive state machine inputs and text.
 
-use std::borrow::Cow;
-
 use bevy::{prelude::*, render::render_resource::Extent3d};
-use rive_bevy::{events, RivePlugin, RiveStateMachine, SceneTarget, SpriteEntity, StateMachine};
+use rive_bevy::{
+    events::{self, InputValue},
+    RivePlugin, RiveStateMachine, SceneTarget, SpriteEntity, StateMachine,
+};
 use rive_rs::components::TextValueRun;
 
 const BACKGROUND_COLOR: Color = Color::rgb(0., 0., 0.);
@@ -52,7 +53,7 @@ fn setup_animation(
 
     let state_machine = StateMachine {
         riv: asset_server.load("circle-fui.riv"),
-        // artboard_handle: rive_bevy::Handle::Name(Cow::Owned("StateMachine".to_string())), // specify the artboard by name
+        // artboard_handle: rive_bevy::Handle::Name("StateMachine".into()), // specify the artboard by name
         ..default()
     };
 
@@ -62,6 +63,7 @@ fn setup_animation(
         sprite: SpriteEntity {
             entity: Some(sprite_entity),
         },
+        ..default()
     });
 }
 
@@ -107,27 +109,26 @@ fn update_state_machine_system(
     mut input_events: EventWriter<events::Input>,
 ) {
     if kbd.just_pressed(KeyCode::Return) {
-        let input_name = "centerHover";
-
         // Get the State Machine and its Entity
         let (entity, state_machine) = query.single_mut();
 
         // Read the current value of an input
-        let center_hover_current = state_machine.get_bool(input_name).unwrap().get();
+        let center_hover_current = state_machine.get_bool("centerHover").unwrap().get();
 
         // Send a new value to the input using Bevy events.
         {
             input_events.send(events::Input {
                 state_machine: entity,
-                name: Cow::Borrowed("centerHover"),
-                value: events::InputValue::Bool(!center_hover_current),
+                name: "centerHover".into(),
+                value: InputValue::Bool(!center_hover_current),
             });
         }
 
         // Alternatively we can use the raw API and send the value directly to the Rive C++ API.
         // Comment the above Bevy event and uncomment the below.
         {
-            //     .get_bool(input_name)
+            // state_machine
+            //     .get_bool("centerHover")
             //     .unwrap()
             //     .set(!center_hover_current);
         }
@@ -152,7 +153,7 @@ fn update_rive_text_system(
         string.pop();
     }
     for ev in evr_char.read() {
-        // ignore control (special) characters
+        // Ignore control (special) characters.
         if !ev.char.is_control() {
             string.push(ev.char);
             did_change = true;

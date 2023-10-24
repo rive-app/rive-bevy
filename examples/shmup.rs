@@ -236,6 +236,7 @@ fn setup(
             sprite: SpriteEntity {
                 entity: Some(player_entity),
             },
+            ..default()
         });
     }
 
@@ -252,7 +253,7 @@ fn setup(
         },
     ));
 
-    // Given the space available, compute how many rows and columns of enemies we can fit
+    // Given the space available, compute how many rows and columns of enemies we can fit.
     let n_columns = (ENEMY_AREA.x / (ENEMY_SIZE.x + GAP_BETWEEN_ENEMIES)).floor() as usize;
     let n_rows = (ENEMY_AREA.y / (ENEMY_SIZE.y + GAP_BETWEEN_ENEMIES)).floor() as usize;
     let n_vertical_gaps = n_columns - 1;
@@ -267,7 +268,6 @@ fn setup(
 
     let mut enemy_image = Image::default();
 
-    // We fill the CPU image with 0s before sending it to the GPU.
     enemy_image.resize(Extent3d {
         width: (ENEMY_SIZE.x as u32) * 2,
         height: (ENEMY_SIZE.y as u32) * 2,
@@ -314,6 +314,7 @@ fn setup(
                 sprite: SpriteEntity {
                     entity: Some(sprite_entity),
                 },
+                ..default()
             });
         }
     }
@@ -342,18 +343,18 @@ fn player_movement_system(
         player.target_drift = 100.;
     }
 
-    // Calculate the new player position based on the input
+    // Calculate the new player position based on the input.
     let new_player_position =
         player_transform.translation.x + direction * PLAYER_SPEED * time_step.delta().as_secs_f32();
 
     // Update player position
-    // making sure it doesn't cause the player to go out of bounds
+    // making sure it doesn't cause the player to go out of bounds.
     let left_bound = LEFT_BOUNT + PLAYER_SIZE.x / 2.0;
     let right_bound = RIGHT_BOUNT - PLAYER_SIZE.x / 2.0;
     player_transform.translation.x = new_player_position.clamp(left_bound, right_bound);
 }
 
-// Randomize the enemy animation start time
+// Randomize the enemy animation start time.
 fn instantiate_enemies_system(
     mut commands: Commands,
     mut query: Query<(Entity, &mut RiveStateMachine), (Without<StartingTime>, Without<Player>)>,
@@ -369,7 +370,7 @@ fn instantiate_enemies_system(
 
 fn instantiate_projectile_system(mut query: Query<&mut RiveStateMachine, Added<EnemyProjectile>>) {
     // Set projectile state machine input to isEnemyProjectile = true
-    // which changes the color of the projectile. Default is the player color projectile
+    // which changes the color of the projectile. Default is the player color projectile.
     for sm in &mut query {
         sm.get_bool("isEnemyProjectile").unwrap().set(true);
     }
@@ -440,6 +441,7 @@ fn player_control_system(
             sprite: SpriteEntity {
                 entity: Some(projectile_entity),
             },
+            ..default()
         });
     }
 }
@@ -483,7 +485,7 @@ fn collision_system(
 
                 commands.entity(projectile_entity).despawn();
 
-                // Send explosition input to player state machine
+                // Send explosition input to player state machine.
                 input_events.send(events::Input {
                     state_machine: player_entity,
                     name: Cow::Owned("explosion".to_string()),
@@ -518,7 +520,7 @@ fn collision_system(
                     .entity(enemy_entity)
                     .insert(EnemyDespawnTimer::default());
 
-                // Set enemy state machine input to isAlive = false
+                // Set enemy state machine input to isAlive = false.
                 input_events.send(events::Input {
                     state_machine: enemy_entity,
                     name: Cow::Owned("isAlive".to_string()),
@@ -592,6 +594,7 @@ fn enemies_shoot_system(
                 sprite: SpriteEntity {
                     entity: Some(projectile),
                 },
+                ..default()
             });
 
             // Play shoot animation on enemy state machine

@@ -20,7 +20,6 @@ fn setup_animation(
 ) {
     let mut animation_image = Image::default();
 
-    // We fill the CPU image with 0s before sending it to the GPU.
     animation_image.resize(Extent3d {
         width: 1024,
         height: 1024,
@@ -60,6 +59,7 @@ fn setup_animation(
         sprite: SpriteEntity {
             entity: Some(sprite_entity),
         },
+        ..default()
     });
 }
 

@@ -11,7 +11,7 @@ use bevy::{
     render::render_resource::Extent3d,
 };
 
-use rive_bevy::{RivePlugin, SceneTarget, StateMachine};
+use rive_bevy::{MeshEntity, RivePlugin, SceneTarget, StateMachine};
 
 fn main() {
     App::new()
@@ -51,7 +51,6 @@ fn setup(
 
     let rive_iamge_handle = images.add(rive_image);
 
-    // let plane_handle = meshes.add(shape::Plane::from_size(10.0).into());
     let plane_handle = meshes.add(Mesh::from(shape::Quad::new(Vec2::new(19.20, 10.80))));
 
     let material_handle = materials.add(StandardMaterial {
@@ -60,30 +59,33 @@ fn setup(
         perceptual_roughness: 0.0,
         metallic: 0.5,
         alpha_mode: AlphaMode::Blend,
-        // emissive: Color::rgba(0.10, 0.10, 0.1, 1.0),
-        // base_color: Color::rgba(0.5, 0.5, 1.0, 0.0),
-        // unlit: true,
         ..default()
     });
+
+    let plane_entity = commands
+        .spawn(PbrBundle {
+            mesh: plane_handle,
+            material: material_handle,
+            transform: Transform::from_xyz(0.0, 0.5, 0.05),
+            ..default()
+        })
+        .id();
 
     commands
         .spawn(StateMachine {
             riv: asset_server.load("sophia_iii_clear.riv"),
-            artboard_handle: rive_rs::Handle::Name(Cow::Owned("DASHBOARD".to_string())),
-            // artboard_handle: rive_rs::Handle::Name(Cow::Owned("SOPHIA III HUD".to_string())),
+            artboard_handle: rive_rs::Handle::Name(Cow::Owned("SOPHIA III HUD".to_string())),
             ..default()
         })
         .insert(SceneTarget {
             image: rive_iamge_handle,
+            // Adding the mesh here enables mouse input being passed to the Scene.
+            mesh: MeshEntity {
+                entity: Some(plane_entity),
+            },
             ..default()
         });
 
-    commands.spawn(PbrBundle {
-        mesh: plane_handle,
-        material: material_handle,
-        transform: Transform::from_xyz(0.0, 0.5, 0.05),
-        ..default()
-    });
     // opaque sphere
     commands.spawn(PbrBundle {
         mesh: meshes.add(
@@ -111,7 +113,7 @@ fn setup(
         ..default()
     });
 
-    // Sky
+    // sky
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Box::default())),
@@ -139,17 +141,6 @@ fn setup(
 
             ..default()
         },
-        // FogSettings {
-        //     color: Color::rgba(0.1, 0.2, 0.4, 0.1),
-        //     directional_light_color: Color::rgba(1.0, 0.95, 0.75, 0.1),
-        //     directional_light_exponent: 30.0,
-        //     falloff: FogFalloff::from_visibility_colors(
-        //         100.0, // distance in world units up to which objects retain visibility (>= 5% contrast)
-        //         Color::rgb(0.35, 0.5, 0.66), // atmospheric extinction color (after light is lost due to absorption by atmospheric particles)
-        //         Color::rgb(0.8, 0.844, 1.0), // atmospheric inscattering color (light gained due to scattering from the sun)
-        //     ),
-        // },
-        // BloomSettings::default(),
         BloomSettings {
             intensity: 0.2,
             low_frequency_boost: 0.7,

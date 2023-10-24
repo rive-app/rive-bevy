@@ -10,6 +10,9 @@ etagere = "0.2.8"
 rive-rs = { path = "../rive-rs/rive-rs", features = ["vello"] }
 vello = { git = "https://github.com/linebender/vello", rev = "ee3a076" }
 
+[dev-dependencies]
+rand = "0.8.5"
+
 [profile.dev]
 opt-level = 1
 
