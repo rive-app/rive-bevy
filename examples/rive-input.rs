@@ -1,6 +1,6 @@
 //! An example showcasing how to manipulate Rive state machine inputs and text.
 
-use bevy::{prelude::*, render::render_resource::Extent3d};
+use bevy::{prelude::*, render::render_resource::Extent3d, window};
 use rive_bevy::{
     events::{self, InputValue},
     RivePlugin, RiveStateMachine, SceneTarget, SpriteEntity, StateMachine,
@@ -15,6 +15,7 @@ fn main() {
         .add_plugins(RivePlugin)
         .insert_resource(ClearColor(BACKGROUND_COLOR))
         .add_systems(Startup, (setup_animation, setup_text))
+        .add_systems(Update, window::close_on_esc)
         .add_systems(
             Update,
             (update_state_machine_system, update_rive_text_system),

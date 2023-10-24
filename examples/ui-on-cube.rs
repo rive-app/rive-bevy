@@ -1,5 +1,6 @@
 use bevy::{
     core_pipeline::clear_color::ClearColorConfig, prelude::*, render::render_resource::Extent3d,
+    window,
 };
 use rive_bevy::{LinearAnimation, RivePlugin, SceneTarget, SpriteEntity, StateMachine};
 
@@ -126,6 +127,7 @@ fn main() {
         .add_plugins(DefaultPlugins.set(AssetPlugin::default()))
         .add_plugins(RivePlugin)
         .add_systems(Startup, setup)
+        .add_systems(Update, window::close_on_esc)
         .add_systems(Update, rotate_cube)
         .run()
 }

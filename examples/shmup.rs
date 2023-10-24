@@ -4,7 +4,7 @@ use std::{borrow::Cow, time::Duration};
 
 use bevy::{
     core_pipeline::bloom::BloomSettings, prelude::*, render::render_resource::Extent3d,
-    sprite::collide_aabb::collide, sprite::MaterialMesh2dBundle,
+    sprite::collide_aabb::collide, sprite::MaterialMesh2dBundle, window,
 };
 
 use rand::prelude::*;
@@ -57,6 +57,7 @@ fn main() {
         .init_resource::<EnemyMoveTimer>()
         .insert_resource(ClearColor(BACKGROUND_COLOR))
         .add_systems(Startup, setup)
+        .add_systems(Update, window::close_on_esc)
         .add_systems(
             FixedUpdate,
             (
@@ -597,7 +598,7 @@ fn enemies_shoot_system(
                 ..default()
             });
 
-            // Play shoot animation on enemy state machine
+            // Play shoot animation on enemy state machine.
             input_events.send(events::Input {
                 state_machine: enemy_entity,
                 name: Cow::Owned("Shoot".to_string()),
@@ -669,7 +670,7 @@ fn drift_player_ship_system(
 
     player.drift = current_drift;
 
-    // Send Rive input event to update the state machine's drift input
+    // Send Rive input event to update the state machine's drift input.
     input_events.send(events::Input {
         state_machine: entity,
         name: Cow::Owned("drift".to_string()),

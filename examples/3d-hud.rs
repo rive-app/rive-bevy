@@ -9,6 +9,7 @@ use bevy::{
     pbr::NotShadowCaster,
     prelude::*,
     render::render_resource::Extent3d,
+    window,
 };
 
 use rive_bevy::{MeshEntity, RivePlugin, SceneTarget, StateMachine};
@@ -23,6 +24,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(RivePlugin)
         .add_systems(Startup, setup)
+        .add_systems(Update, window::close_on_esc)
         .add_systems(Update, camera_control_system)
         .run();
 }
