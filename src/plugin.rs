@@ -349,8 +349,8 @@ impl Plugin for RivePlugin {
                 (
                     pointer_events::pass,
                     pass_state_machine_input_events,
-                    render_rive_scenes,
                     send_generic_events,
+                    render_rive_scenes,
                 )
                     .chain(),
             )
