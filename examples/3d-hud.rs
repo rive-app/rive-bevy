@@ -92,7 +92,7 @@ fn setup(
     commands.spawn(PbrBundle {
         mesh: meshes.add(
             Mesh::try_from(shape::Icosphere {
-                radius: 2.,
+                radius: 2.0,
                 subdivisions: 3,
             })
             .unwrap(),
@@ -111,7 +111,7 @@ fn setup(
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform::from_xyz(0.0, 0.0, 4.0).looking_at(Vec3::new(0., 0., 1.), Vec3::X),
+        transform: Transform::from_xyz(0.0, 0.0, 4.0).looking_at(Vec3::new(0.0, 0.0, 1.0), Vec3::X),
         ..default()
     });
 
@@ -139,7 +139,7 @@ fn setup(
                 ..default()
             },
             transform: Transform::from_xyz(-4.0, 1.0, 15.0)
-                .looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
+                .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
 
             ..default()
         },

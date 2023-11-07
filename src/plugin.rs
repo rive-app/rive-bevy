@@ -67,7 +67,7 @@ fn insert_deafult_viewports(
 
         if let Some(image) = image_assets.get(image_handle) {
             let size = image.size();
-            viewport.resize(size.x as u32, size.y as u32);
+            viewport.resize(size.x, size.y);
         }
 
         commands.entity(entity).insert(viewport);
@@ -81,7 +81,7 @@ fn resize_viewports(
     for (mut viewport, image_handle) in &mut query {
         if let Some(image) = image_assets.get(image_handle) {
             let size = image.size();
-            viewport.resize(size.x as u32, size.y as u32);
+            viewport.resize(size.x, size.y);
         }
     }
 }

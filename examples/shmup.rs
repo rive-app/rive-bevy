@@ -14,35 +14,35 @@ use rive_bevy::{
 };
 use rive_rs::scene::Scene;
 
-// const BACKGROUND_COLOR: Color = Color::rgb(0., 0., 0.);
-const BACKGROUND_COLOR: Color = Color::rgb(0.023, 0., 0.102);
+// const BACKGROUND_COLOR: Color = Color::rgb(0.0, 0.0, 0.0);
+const BACKGROUND_COLOR: Color = Color::rgb(0.023, 0.0, 0.102);
 
 // SIZING
-const WINDOW_SIZE: Vec2 = Vec2::new(1500., 1000.);
-const LEFT_BOUNT: f32 = -WINDOW_SIZE.x / 2.;
-const RIGHT_BOUNT: f32 = WINDOW_SIZE.x / 2.;
+const WINDOW_SIZE: Vec2 = Vec2::new(1500.0, 1000.0);
+const LEFT_BOUNT: f32 = -WINDOW_SIZE.x / 2.0;
+const RIGHT_BOUNT: f32 = WINDOW_SIZE.x / 2.0;
 
 // PLAYER
 const PLAYER_SIZE: Vec3 = Vec3::new(220.0, 220.0, 0.0);
 const PLAYER_IMAGE_SIZE: Vec3 = Vec3::new(220.0, 1000.0, 0.0); // Using a different size as the animation draws outside the artbooard bounds in the y-axis (clipping is disabled for the artboard)
-const PLAYER_COLIDER_SIZE: Vec2 = Vec2::new(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.);
-const GAP_BETWEEN_PLAYER_AND_BOTTOM: f32 = -WINDOW_SIZE.y / 2. + PLAYER_SIZE.y / 2.;
+const PLAYER_COLIDER_SIZE: Vec2 = Vec2::new(PLAYER_SIZE.x / 2.0, PLAYER_SIZE.y / 2.0);
+const GAP_BETWEEN_PLAYER_AND_BOTTOM: f32 = -WINDOW_SIZE.y / 2. + PLAYER_SIZE.y / 2.0;
 const PLAYER_SPEED: f32 = 500.0;
 
 // ENEMY
-const ENEMY_SIZE: Vec2 = Vec2::new(130., 130.); // MAKE SIZE SMALLER TO FIT MORE ENEMIES
-const ENEMY_COLIDER_SIZE: Vec2 = Vec2::new(ENEMY_SIZE.x / 2., ENEMY_SIZE.y / 2.);
+const ENEMY_SIZE: Vec2 = Vec2::new(130.0, 130.0); // MAKE SIZE SMALLER TO FIT MORE ENEMIES
+const ENEMY_COLIDER_SIZE: Vec2 = Vec2::new(ENEMY_SIZE.x / 2.0, ENEMY_SIZE.y / 2.0);
 const GAP_BETWEEN_ENEMIES: f32 = 5.0;
-const ENEMY_MOVE_TIME: f32 = 2.; // MAKE TIME SMALLER TO MAKE ENEMIES MOVE FASTER
-const ENEMY_MOVE_DISTANCE: f32 = 200.;
+const ENEMY_MOVE_TIME: f32 = 2.0; // MAKE TIME SMALLER TO MAKE ENEMIES MOVE FASTER
+const ENEMY_MOVE_DISTANCE: f32 = 200.0;
 const ENEMY_DESPAWN_TIME: f32 = 1.0;
-const ENEMY_AREA: Vec2 = Vec2::new(WINDOW_SIZE.x / 2., WINDOW_SIZE.y / 2.);
+const ENEMY_AREA: Vec2 = Vec2::new(WINDOW_SIZE.x / 2.0, WINDOW_SIZE.y / 2.0);
 
 // PROJECTILES
 const PROJECTILE_SIZE: Vec2 = Vec2::new(10.0, 10.0);
 const PROJECTILE_SPEED: f32 = 400.0;
-const PLAYER_PROJECTILE_DIRECTION: Vec2 = Vec2::new(0., 1.);
-const ENEMY_PROJECTILE_DIRECTION: Vec2 = Vec2::new(0., -1.);
+const PLAYER_PROJECTILE_DIRECTION: Vec2 = Vec2::new(0.0, 1.0);
+const ENEMY_PROJECTILE_DIRECTION: Vec2 = Vec2::new(0.0, -1.0);
 
 fn main() {
     App::new()
@@ -101,8 +101,8 @@ struct Player {
 impl Default for Player {
     fn default() -> Self {
         Self {
-            drift: 0.,
-            target_drift: 0.,
+            drift: 0.0,
+            target_drift: 0.0,
             is_alive: true,
         }
     }
@@ -242,12 +242,12 @@ fn setup(
         });
     }
 
-    let center_y = (WINDOW_SIZE.y - ENEMY_AREA.y) / 2.;
+    let center_y = (WINDOW_SIZE.y - ENEMY_AREA.y) / 2.0;
 
     commands.spawn((
         Transform {
-            translation: Vec3::new(0., center_y, 0.0),
-            scale: Vec3::new(10., 10., 1.0),
+            translation: Vec3::new(0.0, center_y, 0.0),
+            scale: Vec3::new(10.0, 10.0, 1.0),
             ..default()
         },
         EnemyCenterSpawn {
@@ -265,7 +265,7 @@ fn setup(
         - (n_columns as f32 / 2.0 * ENEMY_SIZE.x)
         - n_vertical_gaps as f32 / 2.0 * GAP_BETWEEN_ENEMIES;
 
-    let offset_x = left_edge_of_enemies + ENEMY_SIZE.x / 2.;
+    let offset_x = left_edge_of_enemies + ENEMY_SIZE.x / 2.0;
     let offset_y = ENEMY_SIZE.y / 2. + center_y;
 
     let mut enemy_image = Image::default();
@@ -334,15 +334,15 @@ fn player_movement_system(
     }
 
     let mut direction = 0.0;
-    player.target_drift = 0.;
+    player.target_drift = 0.0;
 
     if keyboard_input.pressed(KeyCode::Left) {
         direction -= 1.0;
-        player.target_drift = -100.;
+        player.target_drift = -100.0;
     }
     if keyboard_input.pressed(KeyCode::Right) {
         direction += 1.0;
-        player.target_drift = 100.;
+        player.target_drift = 100.0;
     }
 
     // Calculate the new player position based on the input.
@@ -417,13 +417,14 @@ fn player_control_system(
                 SpriteBundle {
                     texture: rect_image_handle.clone(),
                     transform: Transform {
-                        scale: Vec3::new(1., 1., 1.0),
-                        translation: transform.translation + Vec3::new(0., PLAYER_SIZE.y / 2., 0.0),
+                        scale: Vec3::new(1.0, 1.0, 1.0),
+                        translation: transform.translation
+                            + Vec3::new(0.0, PLAYER_SIZE.y / 2.0, 0.0),
                         ..default()
                     },
                     sprite: Sprite {
                         color: Color::rgb(4.0, 4.0, 6.0), // 4. Put something bright in a dark environment to see the effect
-                        custom_size: Some(PROJECTILE_SIZE * 2.),
+                        custom_size: Some(PROJECTILE_SIZE * 2.0),
                         ..default()
                     },
                     ..default()
@@ -479,7 +480,7 @@ fn collision_system(
                 collider.size,
             );
 
-            if let Some(_) = collision {
+            if collision.is_some() {
                 if !player.is_alive {
                     continue; // player already destroyed, waiting to despawn
                 }
@@ -509,7 +510,7 @@ fn collision_system(
                 collider.size,
             );
 
-            if let Some(_) = collision {
+            if collision.is_some() {
                 if !enemy.is_alive {
                     continue; // enemy already destroyed, waiting to despawn
                 }
@@ -517,7 +518,7 @@ fn collision_system(
 
                 commands.entity(projectile_entity).despawn();
 
-                target_position.position += Vec2::new(0., -300.);
+                target_position.position += Vec2::new(0.0, -300.0);
                 commands
                     .entity(enemy_entity)
                     .insert(EnemyDespawnTimer::default());
@@ -569,14 +570,14 @@ fn enemies_shoot_system(
                     SpriteBundle {
                         texture: rect_image_handle.clone(),
                         transform: Transform {
-                            scale: Vec3::new(1., 1., 1.0),
+                            scale: Vec3::new(1.0, 1.0, 1.0),
 
                             translation: transform.translation,
                             ..default()
                         },
                         sprite: Sprite {
                             color: Color::rgb(4.0, 4.0, 6.0), // 4. Put something bright in a dark environment to see the effect
-                            custom_size: Some(PROJECTILE_SIZE * 2.),
+                            custom_size: Some(PROJECTILE_SIZE * 2.0),
                             ..default()
                         },
                         ..default()
@@ -622,19 +623,19 @@ fn move_enemies_over_time_system(
 
     if enemy_move_timer.finished() {
         let mut new_position_offset: Vec2 = Vec2::new(0.0, -ENEMY_MOVE_DISTANCE);
-        let right_edge_distance = (moveable_space.x / 2.) - transform.translation.x;
-        let left_edge_distance = (moveable_space.x / 2.) + transform.translation.x;
+        let right_edge_distance = (moveable_space.x / 2.0) - transform.translation.x;
+        let left_edge_distance = (moveable_space.x / 2.0) + transform.translation.x;
 
         match spawn.move_direction {
             MoveDirection::Left => (if left_edge_distance > ENEMY_SIZE.x {
                 transform.translation.x -= ENEMY_MOVE_DISTANCE;
-                new_position_offset = Vec2::new(-ENEMY_MOVE_DISTANCE, 0.);
+                new_position_offset = Vec2::new(-ENEMY_MOVE_DISTANCE, 0.0);
             } else {
                 spawn.move_direction = MoveDirection::Right;
             },),
             MoveDirection::Right => (if right_edge_distance > ENEMY_SIZE.x {
                 transform.translation.x += ENEMY_MOVE_DISTANCE;
-                new_position_offset = Vec2::new(ENEMY_MOVE_DISTANCE, 0.);
+                new_position_offset = Vec2::new(ENEMY_MOVE_DISTANCE, 0.0);
             } else {
                 spawn.move_direction = MoveDirection::Left;
             },),
@@ -667,7 +668,7 @@ fn drift_player_ship_system(
 
     let mut current_drift = lerp(player.drift, player.target_drift, 0.1);
 
-    current_drift = current_drift.clamp(-100., 100.);
+    current_drift = current_drift.clamp(-100.0, 100.0);
 
     player.drift = current_drift;
 
@@ -736,29 +737,29 @@ fn spawn_background(
 ) {
     commands.spawn((
         MaterialMesh2dBundle {
-            mesh: meshes.add(shape::Circle::new(200.).into()).into(),
+            mesh: meshes.add(shape::Circle::new(200.0).into()).into(),
             material: materials.add(ColorMaterial::from(Color::rgb(7.5, 5.0, 7.5))),
-            transform: Transform::from_translation(Vec3::new(750., 500., -5.)),
+            transform: Transform::from_translation(Vec3::new(750.0, 500.0, -5.0)),
             ..default()
         },
-        Velocity(Vec2::new(0., -4.)),
+        Velocity(Vec2::new(0.0, -4.0)),
     ));
 
     commands.spawn((
         MaterialMesh2dBundle {
-            mesh: meshes.add(shape::Circle::new(190.).into()).into(),
-            material: materials.add(ColorMaterial::from(Color::rgb(1., 6., 7.0))),
-            transform: Transform::from_translation(Vec3::new(-900., -500., -5.)),
+            mesh: meshes.add(shape::Circle::new(190.0).into()).into(),
+            material: materials.add(ColorMaterial::from(Color::rgb(1.0, 6.0, 7.0))),
+            transform: Transform::from_translation(Vec3::new(-900.0, -500.0, -5.0)),
             ..default()
         },
-        Velocity(Vec2::new(0., -2.)),
+        Velocity(Vec2::new(0.0, -2.0)),
     ));
 
     let colors: Vec<Color> = vec![
         Color::rgb(7.5, 5.0, 7.5),
         Color::rgb(5.0, 7.5, 7.5),
         Color::rgb(7.5, 7.5, 5.0),
-        Color::rgb(1., 1., 3.0),
+        Color::rgb(1.0, 1.0, 3.0),
     ];
 
     (0..100).for_each(|_| {
@@ -774,7 +775,7 @@ fn spawn_background(
             transform: Transform::from_translation(Vec3::new(
                 WINDOW_SIZE.x / 2. * x,
                 WINDOW_SIZE.y / 2. * y,
-                -5.,
+                -5.0,
             )),
             ..default()
         });
@@ -784,12 +785,12 @@ fn spawn_background(
 // UTILS
 
 fn lerp(a: f32, b: f32, t: f32) -> f32 {
-    return a + (b - a) * t;
+    a + (b - a) * t
 }
 
 fn load_random_bug(asset_server: &Res<AssetServer>) -> Handle<Riv> {
     let val = rand::thread_rng().gen_range(1..4);
 
     let path = format!("shmup/bug_{val}.riv");
-    return asset_server.load(path);
+    asset_server.load(path)
 }

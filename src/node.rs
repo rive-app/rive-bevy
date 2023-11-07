@@ -90,12 +90,12 @@ impl VelloAtlas {
             was_resized = false;
 
             for (entity, width, height) in sizes.iter() {
-                if !self.alloc_ids.contains_key(&entity) {
+                if let std::collections::hash_map::Entry::Vacant(e) = self.alloc_ids.entry(entity) {
                     if let Some(Allocation { id, .. }) = self
                         .atlas_alloc
                         .allocate(Size2D::new(width as i32, height as i32))
                     {
-                        self.alloc_ids.insert(entity, id);
+                        e.insert(id);
                     } else {
                         self.resize(2 * self.atlas_alloc.size().width as u32);
 
@@ -223,7 +223,7 @@ impl Node for VelloNode {
             .renderer
             .render_to_texture(
                 device.wgpu_device(),
-                &queue,
+                queue,
                 &scene,
                 &atlas_texture_view,
                 &RenderParams {
