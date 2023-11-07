@@ -31,6 +31,8 @@ open-source runtime libraries allow them to load their animations into apps, gam
 
 🛠 [Learning Rive](https://rive.app/learn-rive/)
 
+👾 [Rive for Game UI](https://rive.app/game-ui)
+
 ## Getting Started
 
 The Rive Bevy runtime makes use of the [Rive Rust runtime](https://github.com/rive-app/rive-rs).
