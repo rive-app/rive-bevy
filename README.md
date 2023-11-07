@@ -8,6 +8,9 @@
 
 A Bevy runtime library for [Rive](https://rive.app).
 
+> [!NOTE]  
+> This runtime uses [Vello](https://github.com/linebender/vello) as a render back-end, which has certain limitations. Refer to [Known Issues](#known-issues) for details. Efforts are underway to incorporate the [Rive Renderer](https://rive.app/renderer) as another back-end.
+
 ## Table of contents
 
 - ⭐️ [Rive Overview](#rive-overview)
@@ -72,8 +75,9 @@ common problems.
 
 ### Known Issues
 
-The current [Vello] render back-end does not render image meshes correctly and may start
-rendering incorrectly when rendering a very large number of animations.
+The existing [Vello](https://github.com/linebender/vello) render back-end may lead to some inconsistencies in comparison to the original design:
 
-[Vello]: https://github.com/linebender/vello
+- Image meshes: There could be gaps between triangles if the mesh is transparent, and it may render incorrectly with an excessive number of animations.
+- All strokes will have round joins and caps.
 
+Efforts are being made to make the [Rive Renderer](https://rive.app/renderer) available. You'll then have the choice to select your preferred renderer.
