@@ -264,7 +264,7 @@ pub fn pass(
             }
 
             let mut scene = get_scene_or!(continue, linear_animation, state_machine);
-            let image_dimensions = image_assets.get(image_handle).unwrap().size();
+            let image_dimensions = image_assets.get(image_handle).unwrap().size().as_vec2();
 
             match camera_type {
                 CameraType::Camera2d => {
