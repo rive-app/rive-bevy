@@ -48,7 +48,7 @@ cargo run --example ui-on-cube
 
 There are a number of demos/games in the examples folder that showcase various Rive features.
 
-See the [Rive Bevy documentation](https://help.rive.app/game-frameworks/bevy) for additional guides.
+See the [Rive Bevy documentation](https://help.rive.app/game-runtimes/bevy) for additional guides.
 
 ### Awesome Rive
 
