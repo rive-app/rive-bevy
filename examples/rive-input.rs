@@ -8,7 +8,7 @@ use rive_bevy::{
 };
 use rive_rs::components::TextValueRun;
 
-const BACKGROUND_COLOR: Color = Color::rgb(0., 0., 0.);
+const BACKGROUND_COLOR: Color = Color::rgb(0.0, 0.0, 0.0);
 
 fn main() {
     App::new()

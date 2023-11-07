@@ -70,7 +70,7 @@ impl<'e> PointerEventPasser<'e> {
     ) {
         self.cursor_moved_events.retain(|cursor_moved| {
             if let Some(pos) = filter_map(cursor_moved.position) {
-                scene.pointer_move(pos.x, pos.y, &viewport);
+                scene.pointer_move(pos.x, pos.y, viewport);
 
                 false
             } else {
@@ -206,6 +206,7 @@ impl Iterator for Triangles<'_> {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn pass(
     cameras: Query<(
         &Camera,
@@ -264,14 +265,13 @@ pub fn pass(
             }
 
             let mut scene = get_scene_or!(continue, linear_animation, state_machine);
-            let image_dimensions = image_assets.get(image_handle).unwrap().size();
+            let image_dimensions = image_assets.get(image_handle).unwrap().size().as_vec2();
 
             match camera_type {
                 CameraType::Camera2d => {
                     let Some((transform, render_layers)) = sprite_entity
                         .entity
-                        .map(|entity| sprites.get(entity).ok())
-                        .flatten()
+                        .and_then(|entity| sprites.get(entity).ok())
                     else {
                         continue;
                     };
@@ -298,8 +298,7 @@ pub fn pass(
                     let Some((transform, mesh_handle, material_handle, render_layers)) =
                         mesh_entity
                             .entity
-                            .map(|entity| meshes.get(entity).ok())
-                            .flatten()
+                            .and_then(|entity| meshes.get(entity).ok())
                     else {
                         continue;
                     };
