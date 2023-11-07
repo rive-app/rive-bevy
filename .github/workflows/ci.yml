@@ -44,4 +44,4 @@ jobs:
           components: clippy
       - uses: Swatinem/rust-cache@v2
       - run: sudo apt install -y libasound2-dev libudev-dev
-      - run: cargo clippy --all -- -D warnings
+      - run: cargo clippy --all -- -D warnings -A clippy::type-complexity
