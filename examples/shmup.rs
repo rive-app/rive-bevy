@@ -1,6 +1,9 @@
-//! Shoout em up bitchass!
+//! Shoot em up! A simple demo game using Rive and Bevy.
+//! Community animation files:
+//! - https://rive.app/community/4895-9902-bug-enemy/
+//! - https://rive.app/community/4894-9900-ship-gamekit-demo/ (altered for game purposes)
 
-use std::{borrow::Cow, time::Duration};
+use std::time::Duration;
 
 use bevy::{
     core_pipeline::bloom::BloomSettings, prelude::*, render::render_resource::Extent3d,
@@ -83,6 +86,7 @@ fn main() {
                 move_to_target_position_system,
             ),
         )
+        .add_systems(Update, window::close_on_esc)
         .run();
 }
 
@@ -393,7 +397,7 @@ fn player_control_system(
         }
         input_events.send(events::Input {
             state_machine: entity,
-            name: Cow::Owned("shoot".to_string()),
+            name: "shoot".into(),
             value: events::InputValue::Trigger,
         });
 
@@ -490,7 +494,7 @@ fn collision_system(
                 // Send explosition input to player state machine.
                 input_events.send(events::Input {
                     state_machine: player_entity,
-                    name: Cow::Owned("explosion".to_string()),
+                    name: "explosion".into(),
                     value: events::InputValue::Trigger,
                 });
             }
@@ -525,7 +529,7 @@ fn collision_system(
                 // Set enemy state machine input to isAlive = false.
                 input_events.send(events::Input {
                     state_machine: enemy_entity,
-                    name: Cow::Owned("isAlive".to_string()),
+                    name: "isAlive".into(),
                     value: events::InputValue::Bool(false),
                 });
             }
@@ -602,7 +606,7 @@ fn enemies_shoot_system(
             // Play shoot animation on enemy state machine.
             input_events.send(events::Input {
                 state_machine: enemy_entity,
-                name: Cow::Owned("Shoot".to_string()),
+                name: "Shoot".into(),
                 value: events::InputValue::Trigger,
             });
         }
@@ -674,7 +678,7 @@ fn drift_player_ship_system(
     // Send Rive input event to update the state machine's drift input.
     input_events.send(events::Input {
         state_machine: entity,
-        name: Cow::Owned("drift".to_string()),
+        name: "drift".into(),
         value: events::InputValue::Number(player.drift),
     });
 }

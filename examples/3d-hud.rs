@@ -1,6 +1,5 @@
-//! Demonstrates how to use transparency in 3D.
-//! Shows the effects of different blend modes.
-//! The `fade_transparency` system smoothly changes the transparency over time.
+//! Demonstrates a Rive HUD in a 3D scene with a bloom effect.
+//! Note that only the `Dashboard` button works at the start of the animation. The other buttons are placeholders.
 
 use std::borrow::Cow;
 

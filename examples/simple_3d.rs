@@ -1,3 +1,5 @@
+//! An example drawing a Rive animation (State Machine) on a 3d cube - with mouse inputs.
+
 use bevy::{prelude::*, render::render_resource::Extent3d, window};
 use rive_bevy::{RivePlugin, SceneTarget, StateMachine};
 

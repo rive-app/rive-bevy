@@ -1,4 +1,5 @@
 //! An example showcasing how to manipulate Rive state machine inputs and text.
+//! Community animation file: https://rive.app/community/5649-11315-circle-fui/
 
 use bevy::{prelude::*, render::render_resource::Extent3d, window};
 use rive_bevy::{
