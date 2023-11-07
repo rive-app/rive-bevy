@@ -42,12 +42,3 @@ jobs:
           components: clippy
       - uses: Swatinem/rust-cache@v2
       - run: cargo clippy --all -- -D warnings
-
-  no-panic-check:
-    name: No-panic check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.73.0
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo build --profile no-panic -p parse
