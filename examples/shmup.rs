@@ -24,6 +24,7 @@ const RIGHT_BOUNT: f32 = WINDOW_SIZE.x / 2.;
 
 // PLAYER
 const PLAYER_SIZE: Vec3 = Vec3::new(220.0, 220.0, 0.0);
+const PLAYER_IMAGE_SIZE: Vec3 = Vec3::new(220.0, 1000.0, 0.0); // Using a different size as the animation draws outside the artbooard bounds in the y-axis (clipping is disabled for the artboard)
 const PLAYER_COLIDER_SIZE: Vec2 = Vec2::new(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.);
 const GAP_BETWEEN_PLAYER_AND_BOTTOM: f32 = -WINDOW_SIZE.y / 2. + PLAYER_SIZE.y / 2.;
 const PLAYER_SPEED: f32 = 500.0;
@@ -203,8 +204,8 @@ fn setup(
         let mut player_image = Image::default();
 
         player_image.resize(Extent3d {
-            width: (PLAYER_SIZE.x as u32) * 2,
-            height: (PLAYER_SIZE.y as u32) * 2,
+            width: (PLAYER_IMAGE_SIZE.x as u32) * 2,
+            height: (PLAYER_IMAGE_SIZE.y as u32) * 2,
             ..default()
         });
 
