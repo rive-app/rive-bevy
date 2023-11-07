@@ -15,7 +15,6 @@ use rive_bevy::{MeshEntity, RivePlugin, SceneTarget, StateMachine};
 
 fn main() {
     App::new()
-        .insert_resource(Msaa::Sample8)
         .insert_resource(AmbientLight {
             color: Color::WHITE,
             brightness: 1.0 / 5.0f32,
@@ -50,12 +49,12 @@ fn setup(
         ..default()
     });
 
-    let rive_iamge_handle = images.add(rive_image);
+    let rive_image_handle = images.add(rive_image);
 
     let plane_handle = meshes.add(Mesh::from(shape::Quad::new(Vec2::new(19.20, 10.80))));
 
     let material_handle = materials.add(StandardMaterial {
-        base_color_texture: Some(rive_iamge_handle.clone()),
+        base_color_texture: Some(rive_image_handle.clone()),
         reflectance: 1.0,
         perceptual_roughness: 0.0,
         metallic: 0.5,
@@ -79,7 +78,7 @@ fn setup(
             ..default()
         })
         .insert(SceneTarget {
-            image: rive_iamge_handle,
+            image: rive_image_handle,
             // Adding the mesh here enables mouse input being passed to the Scene.
             mesh: MeshEntity {
                 entity: Some(plane_entity),
