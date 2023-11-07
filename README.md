@@ -78,6 +78,5 @@ common problems.
 The existing [Vello](https://github.com/linebender/vello) render back-end may lead to some inconsistencies in comparison to the original design:
 
 - Image meshes: There could be gaps between triangles if the mesh is transparent, and it may render incorrectly with a large number of animations.
-- All strokes will have round joins and caps.
 
 Efforts are being made to make the [Rive Renderer](https://rive.app/renderer) available. You'll then have the choice to select your preferred renderer.
