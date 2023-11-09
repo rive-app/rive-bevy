@@ -1,7 +1,16 @@
 [package]
 name = "rive-bevy"
+description = "Rive Bevy plugin"
 version = "0.1.0"
 edition = "2021"
+authors = ["Dragoș Tiselice <dragos@rive.app>"]
+homepage = "https://rive.app/"
+repository = "https://github.com/rive-app/rive-bevy"
+documentation = "https://help.rive.app/game-runtimes/bevy"
+keywords = ["rive", "bevy", "plugin", "ui", "animation"]
+categories = ["game-development"]
+license = "MIT"
+readme = "../README.md"
 
 [dependencies]
 bevy = "0.12.0"
