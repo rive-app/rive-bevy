@@ -4,7 +4,7 @@
 
 # rive-bevy
 
-![Rive hero image](https://cdn.rive.app/rive_logo_dark_bg.png)
+![Rive hero image](https://github.com/rive-app/rive-bevy/assets/13705472/bfa78329-4652-4330-8f46-70c7f365e7bd)
 
 A Bevy runtime library for [Rive](https://rive.app).
 
