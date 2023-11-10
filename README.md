@@ -8,6 +8,8 @@
 
 A Bevy runtime library for [Rive](https://rive.app).
 
+For comprehensive guides, refer to the [rive-bevy documentation](https://help.rive.app/game-runtimes/bevy).
+
 > [!NOTE]  
 > This runtime uses [Vello](https://github.com/linebender/vello) as a render back-end, which has certain limitations. Refer to [Known Issues](#known-issues) for details. Efforts are underway to incorporate the [Rive Renderer](https://rive.app/renderer) as another back-end.
 
@@ -27,7 +29,7 @@ open-source runtime libraries allow them to load their animations into apps, gam
 
 🏡 [Homepage](https://rive.app/)
 
-📘 [General help docs](https://help.rive.app/)
+📘 [General help docs](https://help.rive.app/) · [Rive Bevy docs](https://help.rive.app/game-runtimes/bevy)
 
 🛠 [Learning Rive](https://rive.app/learn-rive/)
 
