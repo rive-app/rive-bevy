@@ -13,9 +13,9 @@ use bevy::{
 use rand::prelude::*;
 
 use rive_bevy::{
-    events, Riv, RivePlugin, RiveStateMachine, SceneTarget, SpriteEntity, StateMachine,
+    events, rive_rs::scene::Scene, Riv, RivePlugin, RiveStateMachine, SceneTarget, SpriteEntity,
+    StateMachine,
 };
-use rive_rs::scene::Scene;
 
 // const BACKGROUND_COLOR: Color = Color::rgb(0.0, 0.0, 0.0);
 const BACKGROUND_COLOR: Color = Color::rgb(0.023, 0.0, 0.102);

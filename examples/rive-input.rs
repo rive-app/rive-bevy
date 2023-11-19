@@ -4,9 +4,9 @@
 use bevy::{prelude::*, render::render_resource::Extent3d, window};
 use rive_bevy::{
     events::{self, InputValue},
+    rive_rs::components::TextValueRun,
     RivePlugin, RiveStateMachine, SceneTarget, SpriteEntity, StateMachine,
 };
-use rive_rs::components::TextValueRun;
 
 const BACKGROUND_COLOR: Color = Color::rgb(0.0, 0.0, 0.0);
 

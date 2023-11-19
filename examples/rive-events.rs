@@ -1,8 +1,10 @@
 //! An example showcasing how to receive events from a Rive state machine.
 
 use bevy::{prelude::*, render::render_resource::Extent3d, window};
-use rive_bevy::{GenericEvent, RivePlugin, SceneTarget, SpriteEntity, StateMachine};
-use rive_rs::state_machine::Property;
+use rive_bevy::{
+    rive_rs::state_machine::Property, GenericEvent, RivePlugin, SceneTarget, SpriteEntity,
+    StateMachine,
+};
 
 fn main() {
     App::new()

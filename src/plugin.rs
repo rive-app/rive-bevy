@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use bevy::{
     core_pipeline::{core_2d, core_3d},
     ecs::query::BatchingStrategy,
@@ -11,6 +9,7 @@ use bevy::{
     utils::HashMap,
 };
 use rive_rs::Instantiate;
+use std::sync::Arc;
 
 use crate::{
     assets::{self, Riv, RivLoader},
