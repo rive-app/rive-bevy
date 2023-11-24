@@ -1,3 +1,4 @@
+#![allow(clippy::type_complexity)]
 //! Shoot em up! A simple demo game using Rive and Bevy.
 //! Community animation files:
 //! - https://rive.app/community/4895-9902-bug-enemy/
@@ -361,7 +362,6 @@ fn player_movement_system(
 }
 
 // Randomize the enemy animation start time.
-#[allow(clippy::type_complexity)]
 fn instantiate_enemies_system(
     mut commands: Commands,
     mut query: Query<(Entity, &mut RiveStateMachine), (Without<StartingTime>, Without<Player>)>,
