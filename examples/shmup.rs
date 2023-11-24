@@ -1,4 +1,5 @@
 #![allow(clippy::type_complexity)]
+
 //! Shoot em up! A simple demo game using Rive and Bevy.
 //! Community animation files:
 //! - https://rive.app/community/4895-9902-bug-enemy/
