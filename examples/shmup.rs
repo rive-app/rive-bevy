@@ -361,6 +361,7 @@ fn player_movement_system(
 }
 
 // Randomize the enemy animation start time.
+#[allow(clippy::type_complexity)]
 fn instantiate_enemies_system(
     mut commands: Commands,
     mut query: Query<(Entity, &mut RiveStateMachine), (Without<StartingTime>, Without<Player>)>,
