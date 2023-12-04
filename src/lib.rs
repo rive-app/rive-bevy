@@ -5,6 +5,9 @@ mod node;
 mod plugin;
 mod pointer_events;
 
+// Re-export rive-rs
+pub use rive_rs;
+
 pub use crate::{
     assets::Riv,
     components::{
@@ -13,5 +16,5 @@ pub use crate::{
     },
     events::GenericEvent,
     plugin::RivePlugin,
+    rive_rs::Handle,
 };
-pub use rive_rs::Handle;
