@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 mod assets;
 mod components;
 pub mod events;
