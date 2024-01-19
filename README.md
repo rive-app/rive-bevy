@@ -47,6 +47,7 @@ Run one of the example projects:
 ```bash
 git clone https://github.com/rive-app/rive-bevy
 cd rive-bevy/
+cargo update
 cargo run --example ui-on-cube
 ```
 
