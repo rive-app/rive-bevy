@@ -12,6 +12,9 @@ categories = ["game-development"]
 license = "MIT"
 readme = "../README.md"
 
+[features]
+default = []
+
 [dependencies]
 bevy = "0.12.0"
 etagere = "0.2.8"
