@@ -1,7 +1,4 @@
-use bevy::{
-    core_pipeline::clear_color::ClearColorConfig, prelude::*, render::render_resource::Extent3d,
-    window,
-};
+use bevy::{prelude::*, render::render_resource::Extent3d, window};
 use rive_bevy::{LinearAnimation, RivePlugin, SceneTarget, SpriteEntity, StateMachine};
 
 #[derive(Component)]
@@ -86,7 +83,7 @@ fn setup(
         },
         camera_2d: Camera2d {
             // We don't want to clear the 3D objects behind our UI.
-            clear_color: ClearColorConfig::None,
+            // clear_color: ClearColorConfig::None,
         },
         ..default()
     });

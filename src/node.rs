@@ -16,7 +16,7 @@ use bevy::{
     },
 };
 use etagere::{euclid::Size2D, AllocId, Allocation, AtlasAllocator, Rectangle};
-use vello::{kurbo::Affine, RenderParams, Renderer, RendererOptions, SceneBuilder};
+use vello::{kurbo::Affine, AaConfig, AaSupport, RenderParams, Renderer, RendererOptions};
 
 use crate::components::VelloScene;
 
@@ -143,10 +143,11 @@ impl FromWorld for VelloContext {
             inner: Arc::new(Mutex::new(VelloContextInner {
                 renderer: Renderer::new(
                     device.wgpu_device(),
-                    &RendererOptions {
+                    RendererOptions {
                         surface_format: None,
-                        timestamp_period: queue.get_timestamp_period(),
                         use_cpu: false,
+                        antialiasing_support: AaSupport::all(),
+                        num_init_threads: None,
                     },
                 )
                 .expect("failed to crate Vello renderer"),
@@ -196,7 +197,6 @@ impl Node for VelloNode {
         let atlas = context.atlas.as_ref().unwrap();
 
         let mut scene = vello::Scene::default();
-        let mut builder = SceneBuilder::for_scene(&mut scene);
         let mut max_size = (0, 0);
 
         for (entity, VelloScene { fragment, .. }) in self
@@ -206,7 +206,7 @@ impl Node for VelloNode {
             .filter_map(|e| world.get::<VelloScene>(e).map(|s| (e, s)))
         {
             let rect = atlas.get(entity);
-            builder.append(
+            scene.append(
                 fragment,
                 Some(Affine::translate((rect.min.x as f64, rect.min.y as f64))),
             );
@@ -230,6 +230,7 @@ impl Node for VelloNode {
                     base_color: vello::peniko::Color::TRANSPARENT,
                     width: max_size.0,
                     height: max_size.1,
+                    antialiasing_method: AaConfig::Msaa8,
                 },
             )
             .expect("failed to render with Vello");

@@ -6,8 +6,12 @@
 use std::time::Duration;
 
 use bevy::{
-    core_pipeline::bloom::BloomSettings, prelude::*, render::render_resource::Extent3d,
-    sprite::collide_aabb::collide, sprite::MaterialMesh2dBundle, window,
+    core_pipeline::bloom::BloomSettings,
+    math::bounding::{Aabb2d, IntersectsVolume},
+    prelude::*,
+    render::render_resource::Extent3d,
+    sprite::MaterialMesh2dBundle,
+    window,
 };
 
 use rand::prelude::*;
@@ -327,7 +331,7 @@ fn setup(
 }
 
 fn player_movement_system(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<(&mut Transform, &mut Player)>,
     time_step: Res<Time>,
 ) {
@@ -340,11 +344,11 @@ fn player_movement_system(
     let mut direction = 0.0;
     player.target_drift = 0.0;
 
-    if keyboard_input.pressed(KeyCode::Left) {
+    if keyboard_input.pressed(KeyCode::ArrowLeft) {
         direction -= 1.0;
         player.target_drift = -100.0;
     }
-    if keyboard_input.pressed(KeyCode::Right) {
+    if keyboard_input.pressed(KeyCode::ArrowRight) {
         direction += 1.0;
         player.target_drift = 100.0;
     }
@@ -384,7 +388,7 @@ fn instantiate_projectile_system(mut query: Query<&mut RiveStateMachine, Added<E
 
 fn player_control_system(
     mut commands: Commands,
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     query: Query<(Entity, &Transform, &Player)>,
     mut input_events: EventWriter<events::Input>,
     mut images: ResMut<Assets<Image>>,
@@ -477,14 +481,18 @@ fn collision_system(
     // Enemy projectiles on player
     for (projectile_entity, transform) in &enemy_projectiles {
         for (player_entity, player_transform, collider, mut player) in player_query.iter_mut() {
-            let collision = collide(
-                transform.translation,
-                PROJECTILE_SIZE,
-                player_transform.translation,
-                collider.size,
-            );
+            // let collision = collide(
+            //     transform.translation,
+            //     PROJECTILE_SIZE,
+            //     player_transform.translation,
+            //     collider.size,
+            // );
+            let collision =
+                Aabb2d::new(transform.translation.truncate(), PROJECTILE_SIZE / 2.).intersects(
+                    &Aabb2d::new(player_transform.translation.truncate(), collider.size / 2.),
+                );
 
-            if collision.is_some() {
+            if collision {
                 if !player.is_alive {
                     continue; // player already destroyed, waiting to despawn
                 }
@@ -507,14 +515,18 @@ fn collision_system(
         for (enemy_entity, enemy_transform, collider, mut enemy, mut target_position) in
             enemy_query.iter_mut()
         {
-            let collision = collide(
-                transform.translation,
-                PROJECTILE_SIZE,
-                enemy_transform.translation,
-                collider.size,
-            );
+            // let collision = collide(
+            //     transform.translation,
+            //     PROJECTILE_SIZE,
+            //     enemy_transform.translation,
+            //     collider.size,
+            // );
+            let collision =
+                Aabb2d::new(transform.translation.truncate(), PROJECTILE_SIZE / 2.).intersects(
+                    &Aabb2d::new(enemy_transform.translation.truncate(), collider.size / 2.),
+                );
 
-            if collision.is_some() {
+            if collision {
                 if !enemy.is_alive {
                     continue; // enemy already destroyed, waiting to despawn
                 }
@@ -741,7 +753,8 @@ fn spawn_background(
 ) {
     commands.spawn((
         MaterialMesh2dBundle {
-            mesh: meshes.add(shape::Circle::new(200.0).into()).into(),
+            mesh: meshes.add(Circle::new(200.0)).into(),
+            // mesh: meshes.add(bevy_ma).into(),
             material: materials.add(ColorMaterial::from(Color::rgb(7.5, 5.0, 7.5))),
             transform: Transform::from_translation(Vec3::new(750.0, 500.0, -5.0)),
             ..default()
@@ -751,7 +764,7 @@ fn spawn_background(
 
     commands.spawn((
         MaterialMesh2dBundle {
-            mesh: meshes.add(shape::Circle::new(190.0).into()).into(),
+            mesh: meshes.add(Circle::new(190.0)).into(),
             material: materials.add(ColorMaterial::from(Color::rgb(1.0, 6.0, 7.0))),
             transform: Transform::from_translation(Vec3::new(-900.0, -500.0, -5.0)),
             ..default()
@@ -774,7 +787,7 @@ fn spawn_background(
         let size = rand::thread_rng().gen_range(0.1..2.5);
 
         commands.spawn(MaterialMesh2dBundle {
-            mesh: meshes.add(shape::Circle::new(size).into()).into(),
+            mesh: meshes.add(Circle::new(size)).into(),
             material: materials.add(ColorMaterial::from(color)),
             transform: Transform::from_translation(Vec3::new(
                 WINDOW_SIZE.x / 2. * x,

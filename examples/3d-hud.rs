@@ -35,8 +35,8 @@ fn setup(
     asset_server: Res<AssetServer>,
 ) {
     commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(50.0).into()),
-        material: materials.add(Color::rgb(0.3, 0.3, 0.3).into()),
+        mesh: meshes.add(Plane3d::default().mesh().size(50.0, 50.0)),
+        material: materials.add(Color::rgb(0.3, 0.3, 0.3)),
         transform: Transform::from_xyz(0.0, -5.0, 0.0),
         ..default()
     });
@@ -88,14 +88,8 @@ fn setup(
 
     // opaque sphere
     commands.spawn(PbrBundle {
-        mesh: meshes.add(
-            Mesh::try_from(shape::Icosphere {
-                radius: 2.0,
-                subdivisions: 3,
-            })
-            .unwrap(),
-        ),
-        material: materials.add(Color::rgb(0.7, 0.2, 0.1).into()),
+        mesh: meshes.add(Sphere::new(2.0).mesh().ico(5).unwrap()),
+        material: materials.add(Color::rgb(0.7, 0.2, 0.1)),
         transform: Transform::from_xyz(0.0, 0.5, -5.5),
         ..default()
     });
@@ -158,25 +152,25 @@ fn setup(
 fn camera_control_system(
     mut camera: Query<(&mut Camera, &mut Transform, &GlobalTransform), With<Camera3d>>,
     time: Res<Time>,
-    input: Res<Input<KeyCode>>,
+    input: Res<ButtonInput<KeyCode>>,
 ) {
     let (mut camera, mut camera_transform, _) = camera.single_mut();
 
-    if input.just_pressed(KeyCode::H) {
+    if input.just_pressed(KeyCode::KeyH) {
         camera.hdr = !camera.hdr;
     }
 
-    let rotation = if input.pressed(KeyCode::Left) {
+    let rotation = if input.pressed(KeyCode::ArrowLeft) {
         time.delta_seconds()
-    } else if input.pressed(KeyCode::Right) {
+    } else if input.pressed(KeyCode::ArrowRight) {
         -time.delta_seconds()
     } else {
         0.0
     };
 
-    let movement = if input.pressed(KeyCode::Up) {
+    let movement = if input.pressed(KeyCode::ArrowUp) {
         -time.delta_seconds()
-    } else if input.pressed(KeyCode::Down) {
+    } else if input.pressed(KeyCode::ArrowDown) {
         time.delta_seconds()
     } else {
         0.0

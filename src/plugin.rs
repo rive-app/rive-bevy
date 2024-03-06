@@ -1,12 +1,16 @@
 use std::sync::Arc;
 
 use bevy::{
-    core_pipeline::{core_2d, core_3d},
+    core_pipeline::{
+        core_2d::graph::{Core2d, Node2d},
+        core_3d::graph::{Core3d, Node3d},
+    },
     ecs::query::BatchingStrategy,
     prelude::*,
     render::{
-        extract_component::ExtractComponentPlugin, render_graph::RenderGraphApp, Render, RenderApp,
-        RenderSet,
+        extract_component::ExtractComponentPlugin,
+        render_graph::{RenderGraphApp, RenderLabel},
+        Render, RenderApp, RenderSet,
     },
     utils::HashMap,
 };
@@ -318,7 +322,7 @@ fn send_generic_events(
                 name: event.name,
                 delay: event.delay,
                 properties: event.properties,
-            })
+            });
         }
     }
 }
@@ -327,6 +331,9 @@ fn reset_renderer(context: Res<node::VelloContext>) {
     context.reset_renderer();
 }
 pub struct RivePlugin;
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
+pub struct RiveRenderLabel;
 
 impl Plugin for RivePlugin {
     fn build(&self, app: &mut App) {
@@ -364,16 +371,28 @@ impl Plugin for RivePlugin {
 
         render_app
             .init_resource::<node::VelloContext>()
-            .add_systems(Render, reset_renderer.in_set(RenderSet::Cleanup))
-            .add_render_graph_node::<node::VelloNode>(core_2d::graph::NAME, node::VelloNode::NAME)
-            .add_render_graph_edges(
-                core_2d::graph::NAME,
-                &[node::VelloNode::NAME, core_2d::graph::node::MAIN_PASS],
-            )
-            .add_render_graph_node::<node::VelloNode>(core_3d::graph::NAME, node::VelloNode::NAME)
-            .add_render_graph_edges(
-                core_3d::graph::NAME,
-                &[node::VelloNode::NAME, core_3d::graph::node::START_MAIN_PASS],
-            );
+            .add_systems(Render, reset_renderer.in_set(RenderSet::Cleanup));
+
+        // .add_render_graph_node::<node::VelloNode>(core_2d::graph::NAME, node::VelloNode::NAME)
+        // .add_render_graph_edges(
+        //     core_2d::graph::NAME,
+        //     &[node::VelloNode::NAME, core_2d::graph::node::MAIN_PASS],
+        // )
+
+        render_app
+            .add_render_graph_node::<node::VelloNode>(Core2d, RiveRenderLabel)
+            .add_render_graph_edges(Core2d, (RiveRenderLabel, Node2d::MainPass));
+
+        // .add_render_graph_node::<node::VelloNode>(core_3d::graph::NAME, node::VelloNode::NAME)
+        // .add_render_graph_edges(
+        //     core_3d::graph::NAME,
+        //     &[node::VelloNode::NAME, core_3d::graph::node::START_MAIN_PASS],
+        // );
+        // .add_render_graph_node::<ViewNodeRunner<RiveRenderNode>>(Core3d, RiveRenderLabel)
+        // .add_render_graph_edges(Core3d, &[RiveRenderLabel, Node3d::StartMainPass])
+
+        // render_app
+        //     .add_render_graph_node::<node::VelloNode>(Core3d, RiveRenderLabel)
+        //     .add_render_graph_edges(Core3d, (RiveRenderLabel, Node3d::StartMainPass));
     }
 }

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use bevy::{prelude::*, render::extract_component::ExtractComponent};
-use vello::SceneFragment;
+use vello::Scene;
 
 use crate::Riv;
 
@@ -57,29 +57,29 @@ pub struct SceneTarget {
 }
 
 #[derive(Component, Deref)]
-pub(crate) struct VelloFragment(pub Arc<SceneFragment>);
+pub(crate) struct VelloFragment(pub Arc<Scene>);
 
 #[derive(Component)]
 pub(crate) struct VelloScene {
-    pub fragment: Arc<vello::SceneFragment>,
+    pub fragment: Arc<vello::Scene>,
     pub image_handle: Handle<Image>,
     pub width: u32,
     pub height: u32,
 }
 
 impl ExtractComponent for VelloScene {
-    type Query = (
+    type QueryData = (
         &'static VelloFragment,
         &'static Handle<Image>,
         &'static Viewport,
     );
 
-    type Filter = ();
+    type QueryFilter = ();
 
     type Out = Self;
 
     fn extract_component(
-        (fragment, image, viewport): bevy::ecs::query::QueryItem<'_, Self::Query>,
+        (fragment, image, viewport): bevy::ecs::query::QueryItem<'_, Self::QueryData>,
     ) -> Option<Self> {
         Some(Self {
             fragment: fragment.0.clone(),
