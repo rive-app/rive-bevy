@@ -137,7 +137,6 @@ impl VelloContext {
 impl FromWorld for VelloContext {
     fn from_world(world: &mut World) -> Self {
         let device = world.resource::<RenderDevice>();
-        let queue = world.resource::<RenderQueue>();
 
         Self {
             inner: Arc::new(Mutex::new(VelloContextInner {
@@ -173,9 +172,7 @@ pub struct VelloNode {
     scene_entities: Vec<Entity>,
 }
 
-impl VelloNode {
-    pub const NAME: &'static str = "vello";
-}
+impl VelloNode {}
 
 impl Node for VelloNode {
     fn run(
