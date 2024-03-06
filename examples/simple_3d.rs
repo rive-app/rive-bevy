@@ -35,7 +35,7 @@ fn setup_animation(
     let animation_image_handle = images.add(animation_image.clone());
 
     let cube_size = 4.0;
-    let cube_handle = meshes.add(Mesh::from(shape::Box::new(cube_size, cube_size, cube_size)));
+    let cube_handle = meshes.add(Cuboid::new(cube_size, cube_size, cube_size));
 
     let material_handle = materials.add(StandardMaterial {
         base_color_texture: Some(animation_image_handle.clone()),

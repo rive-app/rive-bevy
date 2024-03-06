@@ -373,26 +373,12 @@ impl Plugin for RivePlugin {
             .init_resource::<node::VelloContext>()
             .add_systems(Render, reset_renderer.in_set(RenderSet::Cleanup));
 
-        // .add_render_graph_node::<node::VelloNode>(core_2d::graph::NAME, node::VelloNode::NAME)
-        // .add_render_graph_edges(
-        //     core_2d::graph::NAME,
-        //     &[node::VelloNode::NAME, core_2d::graph::node::MAIN_PASS],
-        // )
-
         render_app
             .add_render_graph_node::<node::VelloNode>(Core2d, RiveRenderLabel)
             .add_render_graph_edges(Core2d, (RiveRenderLabel, Node2d::MainPass));
 
-        // .add_render_graph_node::<node::VelloNode>(core_3d::graph::NAME, node::VelloNode::NAME)
-        // .add_render_graph_edges(
-        //     core_3d::graph::NAME,
-        //     &[node::VelloNode::NAME, core_3d::graph::node::START_MAIN_PASS],
-        // );
-        // .add_render_graph_node::<ViewNodeRunner<RiveRenderNode>>(Core3d, RiveRenderLabel)
-        // .add_render_graph_edges(Core3d, &[RiveRenderLabel, Node3d::StartMainPass])
-
-        // render_app
-        //     .add_render_graph_node::<node::VelloNode>(Core3d, RiveRenderLabel)
-        //     .add_render_graph_edges(Core3d, (RiveRenderLabel, Node3d::StartMainPass));
+        render_app
+            .add_render_graph_node::<node::VelloNode>(Core3d, RiveRenderLabel)
+            .add_render_graph_edges(Core3d, (RiveRenderLabel, Node3d::StartMainPass));
     }
 }
