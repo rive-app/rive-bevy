@@ -83,7 +83,6 @@ fn setup(
         },
         camera_2d: Camera2d {
             // We don't want to clear the 3D objects behind our UI.
-            // clear_color: ClearColorConfig::None,
         },
         ..default()
     });

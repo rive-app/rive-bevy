@@ -18,15 +18,10 @@ default = []
 [dependencies]
 bevy = "0.13.0"
 etagere = "0.2.8"
-# rive-rs = { git = "https://github.com/rive-app/rive-rs", features = ["vello"] }
-# rive-rs = { path = "../rive-rs", features = ["vello"] }
 
 vello = "0.1.0"
 rive-rs = { path = "../rive-rs/rive-rs", features = ["vello"] }
 
-
-# rive-rs = { git = "https://github.com/rive-app/rive-rs", features = ["vello"] }
-# vello = { git = "https://github.com/linebender/vello", rev = "ee3a076" }
 
 [dev-dependencies]
 rand = "0.8.5"

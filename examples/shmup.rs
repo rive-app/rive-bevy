@@ -481,12 +481,6 @@ fn collision_system(
     // Enemy projectiles on player
     for (projectile_entity, transform) in &enemy_projectiles {
         for (player_entity, player_transform, collider, mut player) in player_query.iter_mut() {
-            // let collision = collide(
-            //     transform.translation,
-            //     PROJECTILE_SIZE,
-            //     player_transform.translation,
-            //     collider.size,
-            // );
             let collision =
                 Aabb2d::new(transform.translation.truncate(), PROJECTILE_SIZE / 2.).intersects(
                     &Aabb2d::new(player_transform.translation.truncate(), collider.size / 2.),
@@ -515,12 +509,6 @@ fn collision_system(
         for (enemy_entity, enemy_transform, collider, mut enemy, mut target_position) in
             enemy_query.iter_mut()
         {
-            // let collision = collide(
-            //     transform.translation,
-            //     PROJECTILE_SIZE,
-            //     enemy_transform.translation,
-            //     collider.size,
-            // );
             let collision =
                 Aabb2d::new(transform.translation.truncate(), PROJECTILE_SIZE / 2.).intersects(
                     &Aabb2d::new(enemy_transform.translation.truncate(), collider.size / 2.),
@@ -754,7 +742,6 @@ fn spawn_background(
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes.add(Circle::new(200.0)).into(),
-            // mesh: meshes.add(bevy_ma).into(),
             material: materials.add(ColorMaterial::from(Color::rgb(7.5, 5.0, 7.5))),
             transform: Transform::from_translation(Vec3::new(750.0, 500.0, -5.0)),
             ..default()
