@@ -106,11 +106,11 @@ fn setup_text(mut commands: Commands) {
 }
 
 fn update_state_machine_system(
-    kbd: Res<Input<KeyCode>>,
+    kbd: Res<ButtonInput<KeyCode>>,
     mut query: Query<(Entity, &mut RiveStateMachine)>,
     mut input_events: EventWriter<events::Input>,
 ) {
-    if kbd.just_pressed(KeyCode::Return) {
+    if kbd.just_pressed(KeyCode::Enter) {
         // Get the State Machine and its Entity
         let (entity, state_machine) = query.single_mut();
 
@@ -138,30 +138,30 @@ fn update_state_machine_system(
 }
 
 fn update_rive_text_system(
-    kbd: Res<Input<KeyCode>>,
+    kbd: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut RiveStateMachine>,
     mut string: Local<String>,
     mut evr_char: EventReader<ReceivedCharacter>,
 ) {
     // On toggle, clear the string.
-    if kbd.just_pressed(KeyCode::Return) {
+    if kbd.just_pressed(KeyCode::Enter) {
         string.clear();
         return;
     }
 
     let mut did_change = false;
-    if kbd.just_pressed(KeyCode::Back) {
+    if kbd.just_pressed(KeyCode::Backspace) {
         did_change = true;
         string.pop();
     }
-    for ev in evr_char.read() {
-        // Ignore control (special) characters.
-        if !ev.char.is_control() {
-            string.push(ev.char);
-            did_change = true;
-            info!("{}", string.as_str());
-        }
-    }
+    // for ev in evr_char.read() {
+    //     // Ignore control (special) characters.
+    //     if !ev.char.chars().last().is_control() {
+    //         string.push(ev.char);
+    //         did_change = true;
+    //         info!("{}", string.as_str());
+    //     }
+    // }
 
     // Update our Rive text if the string changed.
     if did_change {

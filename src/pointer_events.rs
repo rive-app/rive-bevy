@@ -109,10 +109,11 @@ struct Triangle {
 }
 
 impl Triangle {
-    pub fn intersect_to_mesh_uv(&self, ray: Ray, cull_mode: Option<Face>) -> Option<Vec2> {
+    pub fn intersect_to_mesh_uv(&self, ray: Ray3d, cull_mode: Option<Face>) -> Option<Vec2> {
         let edge0: Vec3A = (self.vertices[1] - self.vertices[0]).into();
         let edge1: Vec3A = (self.vertices[2] - self.vertices[0]).into();
-        let ray_direction: Vec3A = ray.direction.into();
+        let ray_vector: Vec3 = ray.direction.into();
+        let ray_direction: Vec3A = ray_vector.into();
         let p_vec = ray_direction.cross(edge1);
         let det: f32 = edge0.dot(p_vec);
 

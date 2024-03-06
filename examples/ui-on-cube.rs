@@ -1,7 +1,4 @@
-use bevy::{
-    core_pipeline::clear_color::ClearColorConfig, prelude::*, render::render_resource::Extent3d,
-    window,
-};
+use bevy::{prelude::*, render::render_resource::Extent3d, window};
 use rive_bevy::{LinearAnimation, RivePlugin, SceneTarget, SpriteEntity, StateMachine};
 
 #[derive(Component)]
@@ -30,7 +27,7 @@ fn setup(
     commands.spawn(PointLightBundle {
         point_light: PointLight {
             // A bit brighter to make Marty clearly visible.
-            intensity: 3000.0,
+            intensity: 3000000.0,
             ..default()
         },
         // Light in front of the 3D camera.
@@ -39,7 +36,7 @@ fn setup(
     });
 
     let cube_size = 4.0;
-    let cube_handle = meshes.add(Mesh::from(shape::Box::new(cube_size, cube_size, cube_size)));
+    let cube_handle = meshes.add(Cuboid::new(cube_size, cube_size, cube_size));
 
     let material_handle = materials.add(StandardMaterial {
         base_color_texture: Some(cube_image_handle.clone()),
@@ -86,7 +83,6 @@ fn setup(
         },
         camera_2d: Camera2d {
             // We don't want to clear the 3D objects behind our UI.
-            clear_color: ClearColorConfig::None,
         },
         ..default()
     });
