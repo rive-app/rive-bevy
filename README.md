@@ -2,6 +2,9 @@
 ![Discord badge](https://img.shields.io/discord/532365473602600965)
 ![Twitter handle](https://img.shields.io/twitter/follow/rive_app.svg?style=social&label=Follow)
 
+> [!CAUTION]
+> We've decided to deprioritize our Bevy/Vello work and focus on our Unreal and Unity runtimes. We may return to the Bevy integration in the future, but we don’t currently have an estimate when this might happen. Sorry!
+
 # rive-bevy
 
 ![Rive hero image](https://github.com/rive-app/rive-bevy/assets/13705472/bfa78329-4652-4330-8f46-70c7f365e7bd)
